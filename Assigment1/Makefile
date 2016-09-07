@@ -9,7 +9,7 @@ test:
 	java Lexer test_input_file
 
 clean:
-	rm Lexer.java
+	rm Lexer.java *~ Lexer.class
 
 zip: all
 	zip compiler_project_01.zip analyzer.flex 
