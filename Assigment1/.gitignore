@@ -1,0 +1,10 @@
+
+# temporary backup files
+*~
+*.swp
+
+# java code produced by jflex
+Lexer.java
+
+# java bytecode (our application)
+Lexer.class
