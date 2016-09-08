@@ -1,3 +1,5 @@
+package analyzer;
+
 public enum TokenCode {
   IDENTIFIER, NUMBER, INCDECOP, RELOP, MULOP, ADDOP,
   ASSIGNOP,

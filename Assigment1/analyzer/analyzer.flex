@@ -13,6 +13,7 @@ import analyzer.OpType;
 %line
 %column
 %standalone
+%type Token
 
 // Custom java code there
 %{
@@ -58,13 +59,13 @@ Mulop = ("*"|"/"|"%"|"&&")
 <YYINITIAL> {
 	"break" { /* Ignore for now */ }
 	{WS} { /* Ignore whitespace */ }
-	{Identifier} { return token(IDENTIFIER, ID); }
-	{Int} { return token(NUMBER, INT); }
-	{Real} { return token(NUMBER, REAL);}
-	{Incdecop} { return token(INCDECOP, OP); }
-	{Relop} { return token(RELOP, OP); }
-	{Addop} { return token(ADDOP, OP); }
-	{MulOp} { return token(MULOP, OP); }
+	{Identifier} { return token(TokenCode.IDENTIFIER, DataType.ID); }
+	{Int} { return token(TokenCode.NUMBER, DataType.INT); }
+	{Real} { return token(TokenCode.NUMBER, DataType.REAL);}
+	{Incdecop} { return token(TokenCode.INCDECOP, DataType.OP); }
+	{Relop} { return token(TokenCode.RELOP, DataType.OP); }
+	{Addop} { return token(TokenCode.ADDOP, DataType.OP); }
+	{Mulop} { return token(TokenCode.MULOP, DataType.OP); }
 	{Comment} { /* Ignore comment */ }
 }
 
