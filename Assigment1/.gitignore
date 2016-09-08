@@ -7,4 +7,6 @@
 Lexer.java
 
 # java bytecode (our application)
-Lexer.class
+*.class
+
+
