@@ -9,4 +9,4 @@ Lexer.java
 # java bytecode (our application)
 *.class
 
-
+*.zip
