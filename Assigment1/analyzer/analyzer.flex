@@ -29,6 +29,10 @@ import analyzer.OpType;
 		// TODO - Add checks for operator
 		return OpType.PLUS;
 	}
+
+	private SymbolTableEntry entry(String x) {
+		return new SymbolTableEntry(x);
+	}
 %}
 
 // %debug
@@ -63,9 +67,9 @@ Mulop = ("*"|"/"|"%"|"&&")
 <YYINITIAL> {
 	"break" { /* Ignore for now */ }
 	{WS} { /* Ignore whitespace */ }
-	{Identifier} { return token( DataType.ID, TokenCode.IDENTIFIER, OpType.NONE); }
-	{Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE); }
-	{Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE);}
+	{Identifier} { return token( DataType.ID, TokenCode.IDENTIFIER, OpType.NONE, entry(yytext())); }
+	{Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE, entry(yytext())); }
+	{Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE, entry(yytext()));}
 	{Incdecop} { return token(DataType.OP, TokenCode.INCDECOP, opType(yytext())); }
 	{Relop} { return token(DataType.OP, TokenCode.RELOP, opType(yytext())); }
 	{Addop} { return token(DataType.OP, TokenCode.ADDOP, opType(yytext())); }
