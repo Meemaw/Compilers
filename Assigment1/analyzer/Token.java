@@ -7,7 +7,7 @@ public class Token {
 	private OpType opType;
 	private SymbolTableEntry entry;
 
-	public Token(TokenCode tokenCode, DataType dataType, OpType opType, SymbolTableEntry entry) {
+	public Token(DataType dataType, TokenCode tokenCode, OpType opType, SymbolTableEntry entry) {
 		this.dataType = dataType;
 		this.tokenCode = tokenCode;
 		this.opType = opType;

@@ -17,18 +17,18 @@ import analyzer.OpType;
 
 // Custom java code there
 %{
-	private Token token(TokenCode tc, DataType dt, OpType ot) {
-		return new Token(tc,dt,ot, null);
+	private Token token(DataType dt, TokenCode tc,  OpType ot) {
+		return new Token(dt, tc, ot, null);
 	}
 
-	private Token token(TokenCode tc, DataType dt, OpType ot, SymbolTableEntry ste) {
-		return new Token(tc, dt, ot, ste);
+	private Token token(DataType dt, TokenCode tc, OpType ot, SymbolTableEntry ste) {
+		return new Token(dt, tc, ot, ste);
 	}
 
-	private Token token(TokenCode tc, DataType dt) {
-		return new Token(tc, dt, null, null);
+	private OpType opType(String x) {
+		// TODO - Add checks for operator
+		return OpType.PLUS;
 	}
-
 %}
 
 // %debug
@@ -37,7 +37,7 @@ import analyzer.OpType;
 %eof}
 
 %eofval{
-  return token(TokenCode.EOF, DataType.NONE);
+  return token(DataType.NONE, TokenCode.EOF, OpType.NONE);
 %eofval}
 
 
@@ -63,13 +63,13 @@ Mulop = ("*"|"/"|"%"|"&&")
 <YYINITIAL> {
 	"break" { /* Ignore for now */ }
 	{WS} { /* Ignore whitespace */ }
-	{Identifier} { return token(TokenCode.IDENTIFIER, DataType.ID); }
-	{Int} { return token(TokenCode.NUMBER, DataType.INT); }
-	{Real} { return token(TokenCode.NUMBER, DataType.REAL);}
-	{Incdecop} { return token(TokenCode.INCDECOP, DataType.OP); }
-	{Relop} { return token(TokenCode.RELOP, DataType.OP); }
-	{Addop} { return token(TokenCode.ADDOP, DataType.OP); }
-	{Mulop} { return token(TokenCode.MULOP, DataType.OP); }
+	{Identifier} { return token( DataType.ID, TokenCode.IDENTIFIER, OpType.NONE); }
+	{Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE); }
+	{Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE);}
+	{Incdecop} { return token(DataType.OP, TokenCode.INCDECOP, opType(yytext())); }
+	{Relop} { return token(DataType.OP, TokenCode.RELOP, opType(yytext())); }
+	{Addop} { return token(DataType.OP, TokenCode.ADDOP, opType(yytext())); }
+	{Mulop} { return token(DataType.OP, TokenCode.MULOP, opType(yytext())); }
 	{Comment} { /* Ignore comment */ }
 }
 
