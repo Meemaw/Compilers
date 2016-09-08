@@ -14,6 +14,13 @@ public class Token {
 		this.entry = entry;
 	}
 
+	public Token(TokenCode tokenCode, DataType dataType, OpType opType) {
+		this.dataType = dataType;
+		this.tokenCode = tokenCode;
+		this.opType = opType;
+		this.entry = null;
+	}
+
 	public TokenCode getTokenCode() {
 		return this.tokenCode;
 	}

@@ -18,7 +18,7 @@ import analyzer.OpType;
 // Custom java code there
 %{
 	private Token token(TokenCode tc, DataType dt, OpType ot) {
-		return new Token(tc,dt,ot);
+		return new Token(tc,dt,ot, null);
 	}
 
 	private Token token(TokenCode tc, DataType dt, OpType ot, SymbolTableEntry ste) {
@@ -26,7 +26,7 @@ import analyzer.OpType;
 	}
 
 	private Token token(TokenCode tc, DataType dt) {
-		return new Token(tc, dt);
+		return new Token(tc, dt, null, null);
 	}
 
 %}
@@ -35,6 +35,10 @@ import analyzer.OpType;
 %eof{
   System.out.println("\n");
 %eof}
+
+%eofval{
+  return token(TokenCode.EOF, DataType.NONE);
+%eofval}
 
 
 WS = [ \n\t]+
