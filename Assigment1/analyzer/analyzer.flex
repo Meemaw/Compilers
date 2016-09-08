@@ -5,6 +5,7 @@ import analyzer.TokenCode;
 import analyzer.SymbolTableEntry;
 import analyzer.DataType;
 import analyzer.OpType;
+import static analyzer.OpType.opType;
 
 
 %%
@@ -62,13 +63,13 @@ Mulop = ("*"|"/"|"%"|"&&")
 <YYINITIAL> {
 	"break" { /* Ignore for now */ }
 	{WS} { /* Ignore whitespace */ }
-	{Identifier} { return token( DataType.ID, TokenCode.IDENTIFIER, OpType.NONE, entry(yytext())); }
+	{Identifier} { return token(DataType.ID, TokenCode.IDENTIFIER, OpType.NONE, entry(yytext())); }
 	{Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE, entry(yytext())); }
 	{Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE, entry(yytext()));}
-	{Incdecop} { return token(DataType.OP, TokenCode.INCDECOP, OpType.opType(yytext())); }
-	{Relop} { return token(DataType.OP, TokenCode.RELOP, OpType.opType(yytext())); }
-	{Addop} { return token(DataType.OP, TokenCode.ADDOP, OpType.opType(yytext())); }
-	{Mulop} { return token(DataType.OP, TokenCode.MULOP, OpType.opType(yytext())); }
+	{Incdecop} { return token(DataType.OP, TokenCode.INCDECOP, opType(yytext())); }
+	{Relop} { return token(DataType.OP, TokenCode.RELOP, opType(yytext())); }
+	{Addop} { return token(DataType.OP, TokenCode.ADDOP, opType(yytext())); }
+	{Mulop} { return token(DataType.OP, TokenCode.MULOP, opType(yytext())); }
 	{Comment} { /* Ignore comment */ }
 }
 
