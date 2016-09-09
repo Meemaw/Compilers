@@ -17,17 +17,17 @@ public class TokenDumper {
 
 			switch(dataType) {
 				case ID:
+				case INT:
+				case REAL:
 					System.out.print(tokenCode.toString() + "(" + t.getSymbolTableEntry().getLexeme() +")");
 					break;
 				case OP:
 					System.out.print(tokenCode.toString()  + "(" + t.getOpType() + ")");
 					break;
-				case NONE:
-					break;
-				default:
-					System.out.print(dataType.toString());
-					break;
 
+				default:
+					System.out.print(tokenCode.toString());
+					break;
 			}
 
 
