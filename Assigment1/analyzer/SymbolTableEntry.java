@@ -2,13 +2,13 @@ package analyzer;
 
 public class SymbolTableEntry {
 
-	private Object value;
+	private String lexeme;
 
-	public SymbolTableEntry(Object value) {
-		this.value = value;
+	public SymbolTableEntry(String lexeme) {
+		this.lexeme = lexeme;
 	}
 
-	public Object getValue() {
-		return this.value;
+	public Object getLexeme() {
+		return this.lexeme;
 	}
 }

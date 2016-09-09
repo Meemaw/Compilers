@@ -14,6 +14,7 @@ import static analyzer.OpType.opType;
 %line
 %column
 %standalone
+%public
 %type Token
 
 // Custom java code there
@@ -41,9 +42,8 @@ import static analyzer.OpType.opType;
 %eofval}
 
 
-WS = [ \n\t]+
+WS = [ \n\t\r]+
 Comment = ("/*" [^*]*  "*/")
-Letter     = [A-Za-z]
 Digit      = [0-9]
 Digits = {Digit}+
 Optional_fraction = ([.]{Digits})?
@@ -59,10 +59,10 @@ Mulop = ("*"|"/"|"%"|"&&")
 
 
 %%
+{WS} { /* Ignore whitespace */ }
 
 <YYINITIAL> {
 	"break" { /* Ignore for now */ }
-	{WS} { /* Ignore whitespace */ }
 	{Identifier} { return token(DataType.ID, TokenCode.IDENTIFIER, OpType.NONE, entry(yytext())); }
 	{Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE, entry(yytext())); }
 	{Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE, entry(yytext()));}
