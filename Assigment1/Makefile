@@ -13,4 +13,4 @@ clean:
 	rm analyzer/*.class analyzer/Lexer.java* *.class
 
 zip: all
-	zip compiler_project_01.zip analyzer.flex 
+	zip compiler_project_01.zip analyzer/*.java analyzer/analyzer.flex jflex-1.6.1.jar TokenDumper.java Makefile
