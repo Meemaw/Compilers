@@ -4,12 +4,13 @@ all:
 	java -jar jflex-1.6.1.jar analyzer/analyzer.flex
 	@echo "==================================="
 	javac analyzer/Lexer.java
+	javac TokenDumper.java
 
 test:
-	java analyzer/Lexer test_input_file
+	java TokenDumper "test_input_file"
 
 clean:
-	rm analyzer/Lexer.java* analyzer/Lexer.class
+	rm analyzer/*.class analyzer/Lexer.java* *.class
 
 zip: all
 	zip compiler_project_01.zip analyzer.flex 
