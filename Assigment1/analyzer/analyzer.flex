@@ -42,7 +42,12 @@ import analyzer.OpType;
 
 WS = [ \n\t\r]+
 
-Comment = ("/*" [^*]*  "*/")
+InputCharacter = [^\r\n]
+LineTerminator = \r|\n|\r\n
+MultiLineComment = ("/*" [^*]*  "*/")
+NormalComment = "//" {InputCharacter}* {LineTerminator}?
+Comment = {NormalComment} | {MultiLineComment}
+WS = {LineTerminator} | [ \t\f]
 Letter_ = ([A-Za-z]|"_")
 Digit      = [0-9]
 Id = {Letter_}({Letter_}|{Digit})*

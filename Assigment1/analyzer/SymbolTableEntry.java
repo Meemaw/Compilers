@@ -8,7 +8,7 @@ public class SymbolTableEntry {
 		this.lexeme = lexeme;
 	}
 
-	public Object getLexeme() {
+	public String getLexeme() {
 		return this.lexeme;
 	}
 }
