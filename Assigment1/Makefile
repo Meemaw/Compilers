@@ -9,8 +9,11 @@ all:
 test:
 	java TokenDumper "test_input_file"
 
+tests:
+	./runtest.sh LexAnal.jar
+
 clean:
-	rm -f analyzer/*.class analyzer/Lexer.java* *.class compiler_project_01.zip
+	rm -f analyzer/*.class analyzer/Lexer.java* *.class SourceCode.Zip
 
 zip: all
-	zip compiler_project_01.zip analyzer/*.java analyzer/analyzer.flex jflex-1.6.1.jar TokenDumper.java Makefile
+	zip SourceCode.Zip analyzer/*.java analyzer/analyzer.flex jflex-1.6.1.jar TokenDumper.java Makefile
