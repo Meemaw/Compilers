@@ -1,5 +1,14 @@
-0 20 1.2 2.5E10 3.7E-20 x abacaba sh212 break  a /*   comments working! */  * - + / ++
-
-5.0
-
-dsidfsi
+class Program {
+	/* This is a simple test program */ int i, j;
+	real number;
+		static void main() { i = 0;
+		j = 1;
+		if (i < j) {
+		      number = 12.34;
+		    }
+		else {
+		number = 12.34E7;
+		}
+		i = i + j;
+	}
+}
