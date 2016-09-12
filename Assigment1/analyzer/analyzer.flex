@@ -47,7 +47,7 @@ WS = [ \n\t\r]+
 
 InputCharacter = [^\r\n]
 LineTerminator = \r|\n|\r\n
-MultiLineComment = ("/*" [^*]* "*/")
+MultiLineComment = "/*" [^*] ~"*/" | "/*" "*"+ "/"
 NormalComment = "//" {InputCharacter}* {LineTerminator}?
 Comment = {NormalComment} | {MultiLineComment}
 WS = {LineTerminator} | [ \t\f]
