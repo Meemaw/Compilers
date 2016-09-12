@@ -57,7 +57,7 @@ Id = {Letter_}({Letter_}|{Digit})*
 Digits = {Digit}+
 Optional_fraction = ([.]{Digits})?
 Optional_exponent = ((E[+|-]?){Digits})?
-Int = 0 | [1-9]{Digit}*
+Int = {Digits}+
 Real = {Digits}{Optional_fraction}{Optional_exponent}
 
 %%
@@ -99,6 +99,8 @@ Real = {Digits}{Optional_fraction}{Optional_exponent}
 "if" { return token(DataType.KEYWORD, TokenCode.IF, OpType.NONE); }
 "else" { return token(DataType.KEYWORD, TokenCode.ELSE, OpType.NONE); }
 "for" { return token(DataType.KEYWORD, TokenCode.FOR, OpType.NONE); }
+"return" { return token(DataType.KEYWORD, TokenCode.RETURN, OpType.NONE); }
+"continue" { return token(DataType.KEYWORD, TokenCode.CONTINUE, OpType.NONE); }
 
 {Id} { return token(DataType.ID, TokenCode.IDENTIFIER, OpType.NONE, entry(yytext())); }
 {Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE, entry(yytext())); }

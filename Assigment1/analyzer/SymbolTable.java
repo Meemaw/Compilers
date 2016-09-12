@@ -23,7 +23,7 @@ public class SymbolTable {
 
 	public void printSymbolTable() {
 		for(Map.Entry<Integer, String> entry : table.entrySet()) {
-			System.out.println(entry.getKey() + "\t" + entry.getValue());
+			System.out.println(entry.getKey() + " " + entry.getValue());
 		}
 	}
 
