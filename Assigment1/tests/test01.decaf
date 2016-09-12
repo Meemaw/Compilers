@@ -5,7 +5,7 @@ class Program {
     static void main() {
         i = 0;
         j = 1;
-        i f (i < j) {
+        if (i < j) {
             number = 12.34;
         }
         else {

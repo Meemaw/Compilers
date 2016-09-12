@@ -1,0 +1,13 @@
+
+// single line comment
+
+class Program {
+    /* This is a simple test program */
+
+    int a23456789xa23456789xa23456789x12;
+    int a23456789xa23456789xa23456789x12_this_is_too_long;
+    int a23456789xa23456789xa23456789x123;
+    static void main() {
+        a23456789xa23456789xa23456789x12 = 0;
+    }
+}

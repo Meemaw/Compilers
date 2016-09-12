@@ -5,6 +5,7 @@
 
 # java code produced by jflex
 Lexer.java
+LexAnal.jar
 
 # java bytecode (our application)
 *.class

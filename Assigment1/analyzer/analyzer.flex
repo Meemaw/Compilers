@@ -23,7 +23,10 @@ import analyzer.OpType;
 	}
 
 	private Token token(DataType dt, TokenCode tc, OpType ot, SymbolTableEntry ste) {
-		return new Token(dt, tc, ot, ste);
+		if (tc == TokenCode.IDENTIFIER && ste.getLexeme().length() > 32)
+			return new Token(dt, TokenCode.ERR_LONG_ID, ot, ste);
+		else
+			return new Token(dt, tc, ot, ste);
 	}
 
 	private SymbolTableEntry entry(String x) {
@@ -44,7 +47,7 @@ WS = [ \n\t\r]+
 
 InputCharacter = [^\r\n]
 LineTerminator = \r|\n|\r\n
-MultiLineComment = ("/*" [^*]*  "*/")
+MultiLineComment = ("/*" [^*]* "*/")
 NormalComment = "//" {InputCharacter}* {LineTerminator}?
 Comment = {NormalComment} | {MultiLineComment}
 WS = {LineTerminator} | [ \t\f]
@@ -76,15 +79,17 @@ Real = {Digits}{Optional_fraction}{Optional_exponent}
 "%" { return token(DataType.OP, TokenCode.MULOP, OpType.MOD); }
 "&&" { return token(DataType.OP, TokenCode.MULOP, OpType.AND); }
 "=" { return token(DataType.OP, TokenCode.ASSIGNOP, OpType.ASSIGN); }
-";" { return token(DataType.KEYWORD, TokenCode.SEMICOLON, OpType.NONE); }
-"," { return token(DataType.KEYWORD, TokenCode.COMMA, OpType.NONE); }
-"!" { return token(DataType.KEYWORD, TokenCode.NOT, OpType.NONE); }
-")" { return token(DataType.KEYWORD, TokenCode.RPAREN, OpType.NONE); }
-"(" { return token(DataType.KEYWORD, TokenCode.LPAREN, OpType.NONE); }
-"[" { return token(DataType.KEYWORD, TokenCode.LBRACKET, OpType.NONE); }
-"]" { return token(DataType.KEYWORD, TokenCode.RBRACKET, OpType.NONE); }
-"{" { return token(DataType.KEYWORD, TokenCode.LBRACE, OpType.NONE); }
-"}" { return token(DataType.KEYWORD, TokenCode.RBRACE, OpType.NONE); }
+
+";" { return token(DataType.NONE, TokenCode.SEMICOLON, OpType.NONE); }
+"," { return token(DataType.NONE, TokenCode.COMMA, OpType.NONE); }
+"!" { return token(DataType.NONE, TokenCode.NOT, OpType.NONE); }
+")" { return token(DataType.NONE, TokenCode.RPAREN, OpType.NONE); }
+"(" { return token(DataType.NONE, TokenCode.LPAREN, OpType.NONE); }
+"[" { return token(DataType.NONE, TokenCode.LBRACKET, OpType.NONE); }
+"]" { return token(DataType.NONE, TokenCode.RBRACKET, OpType.NONE); }
+"{" { return token(DataType.NONE, TokenCode.LBRACE, OpType.NONE); }
+"}" { return token(DataType.NONE, TokenCode.RBRACE, OpType.NONE); }
+
 "break" { return token(DataType.KEYWORD, TokenCode.BREAK, OpType.NONE); }
 "class" { return token(DataType.KEYWORD, TokenCode.CLASS, OpType.NONE); }
 "static" { return token(DataType.KEYWORD, TokenCode.STATIC, OpType.NONE); }
@@ -100,15 +105,9 @@ Real = {Digits}{Optional_fraction}{Optional_exponent}
 {Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE, entry(yytext()));}
 {Comment} { /* Ignore comment */ }
 
+//. {  System.out.println("Unknown(" + yytext() +")"); }
 
-
-
-
-
-
-
-. {  System.out.println("Unknown(" + yytext() +")"); }
-
+. { return token(DataType.NONE, TokenCode.ERR_ILL_CHAR, OpType.NONE);}
 
 
 

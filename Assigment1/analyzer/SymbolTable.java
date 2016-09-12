@@ -1,14 +1,15 @@
 package analyzer;
-import analyzer.SymbolTableEntry;
 import java.util.*;
 import analyzer.SymbolTableEntry;
 
 public class SymbolTable {
 
 	private TreeMap<Integer, String> table;
+	private Integer index;
 
 	public SymbolTable() {
 		this.table = new TreeMap<>();
+		this.index = 0;
 	}
 
 	public SymbolTableEntry contains(SymbolTableEntry x) {
@@ -16,13 +17,13 @@ public class SymbolTable {
 		else return null;
 	}
 
-	public void put(SymbolTableEntry entry, Integer index) {
-		table.put(index, entry.getLexeme());
+	public void add(SymbolTableEntry entry) {
+		table.put(this.index++, entry.getLexeme());
 	}
 
 	public void printSymbolTable() {
 		for(Map.Entry<Integer, String> entry : table.entrySet()) {
-			System.out.println(entry.getKey() + " " + entry.getValue());
+			System.out.println(entry.getKey() + "\t" + entry.getValue());
 		}
 	}
 

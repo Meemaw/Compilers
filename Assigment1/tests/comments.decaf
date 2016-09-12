@@ -1,0 +1,25 @@
+
+// single line comment   /* this should be treated as single line comment
+
+class Program {
+    /* This is a simple test program */
+    int i;
+    static void main() {/*
+    multi
+    line   5 + 5 // single line comment inside multiline
+    comment
+    */
+        i /* comment here*/= 0;    // single line comment after command
+    }
+//}
+
+}
+
+    // tab and comment
+
+
+
+/*
+
+
+Comment without end mark

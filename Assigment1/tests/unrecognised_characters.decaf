@@ -1,0 +1,12 @@
+class Program {
+    /* This is a simple test program */
+    int i;$
+    real #number;
+    static` void `main() {
+        i = 0;
+        if (i) {
+            number = 12.34;
+        }
+    }
+}
+@

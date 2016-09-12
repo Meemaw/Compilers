@@ -1,27 +1,32 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+# source library
+. ./libtest.sh || exit 1
 
-
+# in case of missing argument print usage
 if [ $# -eq 0 ]; then
     echo "Usage: $0 \$JAR_FILE"
     exit 1
 fi
 
-JAR_FILE="$1"
+
+JAR_FILE="`readlink -f $1`"
 TESTS_FOLDER="tests"
 exit_code=0
 
+cd "$TESTS_FOLDER"
 
-for decaf_source_file in `ls $TESTS_FOLDER/*.decaf`
+# for every .decaf file in $TESTS_FOLDER
+for decaf_source_file in `ls *.decaf`
 do
 	echo $decaf_source_file
 	BASENAME="`basename $decaf_source_file .decaf`"
-	java -jar $JAR_FILE $decaf_source_file > $BASENAME.stdout 2> $BASENAME.stderr
+	run_command "java -jar $JAR_FILE $decaf_source_file > $BASENAME.out.real" #2> $BASENAME.err.real
 	#echo "$?" > $BASENAME.exit_code
-	diff $BASENAME.stdout.correct $BASENAME.stdout
-	if [ "$?" -ne 0 ]; then
-		exit_code=1
-	fi
+	run_command "diff $BASENAME.out.correct $BASENAME.out.real"
+	echo "======================================="
 done
 
-exit $exit_code
+cd ..
+
+Exit
