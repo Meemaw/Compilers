@@ -16,7 +16,7 @@ tests:
 	@./runtest.sh LexAnal.jar
 
 clean:
-	rm -f analyzer/*.class analyzer/Lexer.java* *.class SourceCode.Zip LexAnal.jar
+	rm -f analyzer/*.class analyzer/Lexer.java* *.class SourceCode.Zip LexAnal.jar tests/*.real
 
 zip: all
 	zip SourceCode.Zip META-INF/ analyzer/analyzer.flex analyzer/*.java TokenDumper.java jflex-1.6.1.jar LexAnal.jar Makefile test.decaf

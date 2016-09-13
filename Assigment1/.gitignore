@@ -11,6 +11,10 @@ LexAnal.jar
 # java bytecode (our application)
 *.class
 
+# generated output from tests
+tests/*.real
+
 *.zip
+*.Zip
 
 TODO
