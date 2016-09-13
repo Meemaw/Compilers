@@ -30,7 +30,7 @@ public class SymbolTable {
 		{
 			public int compare(Map.Entry<SymbolTableEntry, Integer> o1, Map.Entry<SymbolTableEntry, Integer> o2)
 			{
-				return o1.getValue() - o2.getValue();
+				return o1.getValue().compareTo(o2.getValue());
 			}
 		});
 		return list;

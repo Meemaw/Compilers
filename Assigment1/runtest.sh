@@ -10,7 +10,8 @@ if [ $# -eq 0 ]; then
 fi
 
 
-JAR_FILE="`readlink -f $1`"
+
+JAR_FILE="`realpath $1`"
 TESTS_FOLDER="tests"
 exit_code=0
 
