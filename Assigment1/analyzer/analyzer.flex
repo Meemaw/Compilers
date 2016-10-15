@@ -19,14 +19,14 @@ import analyzer.OpType;
 // Custom java code there
 %{
 	private Token token(DataType dt, TokenCode tc,  OpType ot) {
-		return new Token(dt, tc, ot, null);
+		return new Token(dt, tc, ot, null, yyline, yycolumn);
 	}
 
 	private Token token(DataType dt, TokenCode tc, OpType ot, SymbolTableEntry ste) {
 		if (tc == TokenCode.IDENTIFIER && ste.getLexeme().length() > 32)
-			return new Token(dt, TokenCode.ERR_LONG_ID, ot, ste);
+			return new Token(dt, TokenCode.ERR_LONG_ID, ot, ste, yyline, yycolumn);
 		else
-			return new Token(dt, tc, ot, ste);
+			return new Token(dt, tc, ot, ste, yyline, yycolumn);
 	}
 
 	private SymbolTableEntry entry(String x) {
