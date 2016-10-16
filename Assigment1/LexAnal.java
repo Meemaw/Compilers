@@ -1,7 +1,7 @@
 import java.io.*;
 import analyzer.*;
 
-public class TokenDumper {
+public class LexAnal {
 
 	public static void main(String[] args) throws  IOException {
 		Lexer lexer = new Lexer(new FileReader(args[0]));

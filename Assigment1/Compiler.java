@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import analyzer.*;
 
 public class Compiler {
@@ -10,6 +11,10 @@ public class Compiler {
 
 		Parser p = new Parser(lexer,table);
 
+		ArrayList<ParseException> error_list = p.parse();
+
+		if (error_list.isEmpty())
+			System.out.println("No errors\n");
 
 	}
 

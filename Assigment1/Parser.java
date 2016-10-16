@@ -21,7 +21,7 @@ public class Parser{
 
 
 		return errorList;
-	} 
+	}
 
 
 	private void program() throws IOException {
@@ -42,7 +42,7 @@ public class Parser{
 	private void method_declarations() {
 
 	}
-	
+
 
 	private boolean accept(TokenCode code) throws IOException{
 		if(currentToken.getTokenCode() == code) {
