@@ -137,6 +137,8 @@ public class Parser{
 
 	private void statement_list() throws Exception {
 		// TODO
+		if(!statement_start())
+			return;  // epsilong rule
 
 	}
 
@@ -161,6 +163,17 @@ public class Parser{
 
 	private void next_token() throws Exception {
 		currentToken = lexer.yylex();
+	}
+
+	private boolean statement_start() {
+		return currentToken.getTokenCode() == TokenCode.IDENTIFIER 
+			|| currentToken.getTokenCode() == TokenCode.IF
+			|| currentToken.getTokenCode() == TokenCode.ELSE
+			|| currentToken.getTokenCode() == TokenCode.FOR
+			|| currentToken.getTokenCode() == TokenCode.RETURN
+			|| currentToken.getTokenCode() == TokenCode.BREAK
+			|| currentToken.getTokenCode() == TokenCode.CONTINUE
+			|| currentToken.getTokenCode() == TokenCode.LBRACE;
 	}
 
 }
