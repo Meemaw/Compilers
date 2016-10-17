@@ -168,7 +168,6 @@ public class Parser{
 	private boolean statement_start() {
 		return currentToken.getTokenCode() == TokenCode.IDENTIFIER 
 			|| currentToken.getTokenCode() == TokenCode.IF
-			|| currentToken.getTokenCode() == TokenCode.ELSE
 			|| currentToken.getTokenCode() == TokenCode.FOR
 			|| currentToken.getTokenCode() == TokenCode.RETURN
 			|| currentToken.getTokenCode() == TokenCode.BREAK
