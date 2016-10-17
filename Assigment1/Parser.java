@@ -101,7 +101,7 @@ public class Parser{
 		expect(TokenCode.IDENTIFIER);
 		expect(TokenCode.LPAREN);
 
-		paremeters();
+		parameters();
 
 		expect(TokenCode.RPAREN);
 		expect(TokenCode.LBRACE);
@@ -131,12 +131,13 @@ public class Parser{
 		else
 			throw new ParseException(currentToken+"");
 
-		expect(DataType.IDENTIFIER);
+		expect(TokenCode.IDENTIFIER);
 	}
 
 
 	private void statement_list() throws Exception {
 		// TODO
+
 	}
 
 
@@ -161,8 +162,5 @@ public class Parser{
 	private void next_token() throws Exception {
 		currentToken = lexer.yylex();
 	}
-
-
-
 
 }
