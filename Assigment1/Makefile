@@ -21,5 +21,5 @@ clean:
 	rm -f analyzer/*.class analyzer/Lexer.java* *.class SourceCode.Zip LexAnal.jar Parser.jar tests/*.real
 
 zip: all
-	zip SourceCode.Zip META-INF/* analyzer/analyzer.flex analyzer/*.java *.java jflex-1.6.1.jar Parser.jar Makefile test.decaf AUTHORS
+	zip SourceCode.Zip META-INF/* analyzer/analyzer.flex analyzer/*.java *.java jflex-1.6.1.jar Parser.jar Makefile AUTHORS
 
