@@ -154,7 +154,7 @@ public class Parser{
 			next_token();
 			assign_incdec_func_call();
 			expect(TokenCode.SEMICOLON);
-		} 
+		}
 		else if(match(TokenCode.IF)) {
 			next_token();
 			expect(TokenCode.LPAREN);
@@ -162,7 +162,7 @@ public class Parser{
 			expect(TokenCode.RPAREN);
 			statement_block();
 			optional_else();
-		} 
+		}
 		else if(match(TokenCode.FOR)) {
 			next_token();
 			expect(TokenCode.LPAREN);
@@ -175,16 +175,16 @@ public class Parser{
 			incr_decr_var();
 			expect(TokenCode.RPAREN);
 			statement_block();
-		} 
+		}
 		else if(match(TokenCode.RETURN)) {
 			next_token();
 			optional_expression();
 			expect(TokenCode.SEMICOLON);
-		} 
+		}
 		else if(match(TokenCode.BREAK) || match(TokenCode.CONTINUE)) {
 			next_token();
 			expect(TokenCode.SEMICOLON);
-		} 
+		}
 		else {
 			statement_block();
 		}
@@ -237,7 +237,6 @@ public class Parser{
 		statement_block();
 	}
 
-	// TODO - need function to check if its start of expression
 	private void expression_list() throws Exception {
 		if(!expression_start())
 			return; // epsilon rule
@@ -271,14 +270,10 @@ public class Parser{
 
 	private void simple_expression() throws Exception {
 		// sign rule
-		if(match(OpType.PLUS) || match(OpType.MINUS)) {
+		if(match(OpType.PLUS) || match(OpType.MINUS))
 			sign();
-			term();
-			optional_addops();
-		} else {
-			term();
-			optional_addops();
-		}
+		term();
+		optional_addops();
 	}
 
 	private void optional_addops() throws Exception {
@@ -315,7 +310,7 @@ public class Parser{
 			next_token();
 			expression();
 			expect(TokenCode.RPAREN);
-		} 
+		}
 		else if(match(TokenCode.NOT)) {
 			next_token();
 			factor();
@@ -343,17 +338,17 @@ public class Parser{
 	private void opt_index() throws Exception {
 		if(!match(TokenCode.LBRACKET))
 			return; // epsilon rule
-
 		next_token();
-		expression();
-		expect(TokenCode.RBRACKET);
 
+		expression();
+
+		expect(TokenCode.RBRACKET);
 	}
 
 	private void sign() throws Exception {
-		if(!match(OpType.PLUS) && !match(OpType.MINUS)) 
+		if(!match(OpType.PLUS) && !match(OpType.MINUS))
 			throw new ParseException(tokenSyntaxError(TokenCode.ADDOP));
-		
+
 		next_token();
 	}
 
@@ -373,16 +368,6 @@ public class Parser{
 		//return false;
 	}
 
-	private boolean expect(OpType opType) throws Exception {
-		if(currentToken.getOpType() == opType) {
-			next_token();
-			return true;
-		}
-		errorList.add(new ParseError("error", currentToken));
-		throw new ParseException(tokenSyntaxError(opType));
-		//return false;
-	}
-
 	private boolean match(TokenCode code) {
 		return currentToken.getTokenCode() == code;
 	}
@@ -397,7 +382,7 @@ public class Parser{
 	}
 
 	private boolean statement_start() {
-		return currentToken.getTokenCode() == TokenCode.IDENTIFIER 
+		return currentToken.getTokenCode() == TokenCode.IDENTIFIER
 			|| currentToken.getTokenCode() == TokenCode.IF
 			|| currentToken.getTokenCode() == TokenCode.FOR
 			|| currentToken.getTokenCode() == TokenCode.RETURN
