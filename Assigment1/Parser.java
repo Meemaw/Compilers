@@ -1,5 +1,5 @@
 import analyzer.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.io.IOException;
 
 
@@ -12,16 +12,18 @@ public class Parser{
 
 	private Lexer lexer;
 	private SymbolTable symbolTable;
-	private ArrayList<ParseException> errorList;
+	private ArrayList<ParseError> errorList;
 	private Token currentToken;
+	private List<String> lines;
 
-	public Parser(Lexer lexer, SymbolTable symbolTable) {
+	public Parser(Lexer lexer, SymbolTable symbolTable, List<String> lines) {
 		this.symbolTable = symbolTable;
 		this.lexer = lexer;
 		this.errorList =  new ArrayList<>();
+		this.lines = lines;
 	}
 
-	public ArrayList<ParseException> parse() throws Exception {
+	public ArrayList<ParseError> parse() throws Exception {
 		program();
 
 		return errorList;
@@ -45,6 +47,7 @@ public class Parser{
 		if (type() != DataType.INT && type() != DataType.REAL)
 			return; // epsilon rule
 
+		next_token(); // consume INT | REAL
 		variable_list();
 
 		expect(TokenCode.SEMICOLON);
@@ -76,6 +79,7 @@ public class Parser{
 	private void variable() throws Exception {
 		expect(TokenCode.IDENTIFIER);
 
+
 		if (match(TokenCode.LBRACKET)) {
 			next_token();
 			expect(TokenCode.NUMBER);
@@ -96,7 +100,7 @@ public class Parser{
 		if (type() != DataType.NOT_A_TYPE)
 			next_token();
 		else
-			throw new ParseException(currentToken+"");
+			throw new ParseException(tokenSyntaxError(TokenCode.STATIC));
 
 		expect(TokenCode.IDENTIFIER);
 		expect(TokenCode.LPAREN);
@@ -129,7 +133,7 @@ public class Parser{
 		if (type() == DataType.INT || type() == DataType.REAL)
 			next_token();
 		else
-			throw new ParseException(currentToken+"");
+			throw new ParseException(tokenSyntaxError(TokenCode.INT));
 
 		expect(TokenCode.IDENTIFIER);
 	}
@@ -149,8 +153,8 @@ public class Parser{
 			next_token();
 			return true;
 		}
-		errorList.add(new ParseException(currentToken+""));
-		throw new ParseException(currentToken+"");
+		errorList.add(new ParseError("error", currentToken));
+		throw new ParseException(tokenSyntaxError(code));
 		//return false;
 	}
 
@@ -173,6 +177,22 @@ public class Parser{
 			|| currentToken.getTokenCode() == TokenCode.BREAK
 			|| currentToken.getTokenCode() == TokenCode.CONTINUE
 			|| currentToken.getTokenCode() == TokenCode.LBRACE;
+	}
+
+	private String tokenSyntaxError(TokenCode expect) {
+		int line = currentToken.getLine();
+		String s = lineOutput(line, lines.get(line), 4);
+		s += messageOutput("Expected " + expect, 4);
+		s += "Actual " + currentToken.getTokenCode();
+		return s;
+	}
+
+	private String lineOutput(int lineNumber, String line, int formatLength) {
+		return String.format("%1$" + formatLength + "d", lineNumber) + " : " + line + "\n" ;
+	}
+
+	private String messageOutput(String message, int formatLength) {
+		return String.format("%1$" + formatLength + "s", "^") + " " + message + "\n";
 	}
 
 }

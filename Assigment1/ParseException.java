@@ -1,7 +1,8 @@
 
+
 public class ParseException extends Exception {
 
-	public ParseException(String error) {
-		super(error);
+	public ParseException(String message) {
+		super(message);
 	}
 }
