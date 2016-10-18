@@ -152,7 +152,7 @@ public class Parser{
 	private void statement() throws Exception {
 		if(match(TokenCode.IDENTIFIER)) {
 			next_token();
-			a_id();
+			assign_incdec_func_call();
 			expect(TokenCode.SEMICOLON);
 		} 
 		else if(match(TokenCode.IF)) {
@@ -191,10 +191,26 @@ public class Parser{
 	}
 
 
+	private void assign_incdec_func_call() throws Exception {
+		if(match(TokenCode.LPAREN)) {
+			next_token();
+			expression_list();
+			match(TokenCode.RPAREN);
+		}
+		else {
+			opt_index();
+			assign_or_inc();
+		}
+	}
 
-	
-
-
+	private void assign_or_inc() throws Exception {
+		if(match(TokenCode.INCDECOP))
+			next_token();
+		else {
+			expect(TokenCode.ASSIGNOP);
+			expression();
+		}
+	}
 
 	private void optional_expression() throws Exception {
 		if(!expression_start())
@@ -290,7 +306,7 @@ public class Parser{
 	private void factor() throws Exception {
 		if(match(TokenCode.IDENTIFIER)){
 			next_token();
-			a_id();
+			opt_array_func_call();
 		}
 		else if(match(TokenCode.NUMBER)) {
 			next_token();
@@ -308,41 +324,21 @@ public class Parser{
 		}
 	}
 
+	private void opt_array_func_call() throws Exception {
+		if(match(TokenCode.LPAREN)) {
+			next_token();
+			expression_list();
+			expect(TokenCode.RPAREN);
+		}
+		else opt_index();
+	}
+
 	private void variable_loc() throws Exception {
 		expect(TokenCode.IDENTIFIER);
 		opt_index();
 	}
 
 
-
-	private void a_id() throws Exception {
-		if(match(TokenCode.LPAREN)) {
-			next_token();
-			expression_list();
-			expect(TokenCode.RPAREN);
-		}
-		else {
-			opt_index();
-			a_opt_index();
-		}
-
-		
-	}
-
-	private void a_opt_index() throws Exception {
-
-		if(!match(TokenCode.INCDECOP) && !match(TokenCode.ASSIGNOP))
-			return; // epsilon rule;
-
-
-
-		if(match(TokenCode.ASSIGNOP)) {
-			next_token();
-			expression();
-		}
-		else
-			next_token();
-	}
 
 	private void opt_index() throws Exception {
 		if(!match(TokenCode.LBRACKET))

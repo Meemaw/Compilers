@@ -13,6 +13,7 @@ all:
 
 test:
 	java -jar Parser.jar "test.decaf"
+	java -jar Parser.jar "algebra.decaf"
 
 tests:
 	@./runtest.sh Parser.jar
