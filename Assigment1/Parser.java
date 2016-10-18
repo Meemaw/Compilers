@@ -25,7 +25,12 @@ public class Parser{
 	}
 
 	public ArrayList<ParseError> parse() throws Exception {
-		program();
+		try {
+			program();
+		}
+		catch (ParseException e) {
+			errorList.add(new ParseError("Expected token ", currentToken));
+		}
 
 		return errorList;
 	}
@@ -35,7 +40,7 @@ public class Parser{
 		next_token();
 
 		expect(TokenCode.CLASS);
-		expect(TokenCode.IDENTIFIER);
+		expectIdentifierProgram(TokenCode.IDENTIFIER);
 		expect(TokenCode.LBRACE);
 
 		variable_declarations();
@@ -423,5 +428,14 @@ public class Parser{
 	private String messageOutput(String message, int formatLength) {
 		return String.format("%1$" + formatLength + "s", "^") + " " + message + "\n";
 	}
+
+	private void expectIdentifierProgram(TokenCode token) throws Exception {
+		if(currentToken.getTokenCode() != token) throw new ParseException(TokenCode.IDENTIFIER + "");
+		if(!currentToken.getSymbolTableEntry().getLexeme().equals("Program")) 
+			throw new ParseException("Identifier Program");
+		next_token();
+	}
+
+
 
 }
