@@ -14,8 +14,8 @@ class Program {
         }
         return t[9]; 
     }
-    
-    static void main() { 
+
+    static void main() {
         x = 1;
         y = 2.0*(3.14);
         x++;

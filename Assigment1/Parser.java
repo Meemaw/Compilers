@@ -14,6 +14,7 @@ public class Parser{
 	private SymbolTable symbolTable;
 	private ArrayList<ParseError> errorList;
 	private Token currentToken;
+	private Token previous;
 	private List<String> lines;
 
 	public Parser(Lexer lexer, SymbolTable symbolTable, List<String> lines) {
@@ -140,15 +141,233 @@ public class Parser{
 
 
 	private void statement_list() throws Exception {
-		// TODO
 		if(!statement_start())
-			return;  // epsilong rule
+			return;  // epsilon rule
 
+		statement();
+		statement_list();
+
+	}
+
+	private void statement() throws Exception {
+		if(match(TokenCode.IDENTIFIER)) {
+			next_token();
+			a_id();
+			expect(TokenCode.SEMICOLON);
+		} 
+		else if(match(TokenCode.IF)) {
+			next_token();
+			expect(TokenCode.LPAREN);
+			expression();
+			expect(TokenCode.RPAREN);
+			statement_block();
+			optional_else();
+		} 
+		else if(match(TokenCode.FOR)) {
+			next_token();
+			expect(TokenCode.LPAREN);
+			variable_loc();
+			expect(TokenCode.ASSIGNOP);
+			expression();
+			expect(TokenCode.SEMICOLON);
+			expression();
+			expect(TokenCode.SEMICOLON);
+			incr_decr_var();
+			expect(TokenCode.RPAREN);
+			statement_block();
+		} 
+		else if(match(TokenCode.RETURN)) {
+			next_token();
+			optional_expression();
+			expect(TokenCode.SEMICOLON);
+		} 
+		else if(match(TokenCode.BREAK) || match(TokenCode.CONTINUE)) {
+			next_token();
+			expect(TokenCode.SEMICOLON);
+		} 
+		else {
+			statement_block();
+		}
 	}
 
 
 
+	
+
+
+
+	private void optional_expression() throws Exception {
+		if(!expression_start())
+			return; // epsilon rule;
+
+		expression();
+	}
+
+	private void statement_block() throws Exception {
+		expect(TokenCode.LBRACE);
+		statement_list();
+		expect(TokenCode.RBRACE);
+	}
+
+	private void incr_decr_var() throws Exception {
+		variable_loc();
+		expect(TokenCode.INCDECOP);
+	}
+
+	private void optional_else() throws Exception {
+		if(!match(TokenCode.ELSE))
+			return;  // epsilon rule
+		next_token();
+		statement_block();
+	}
+
+	// TODO - need function to check if its start of expression
+	private void expression_list() throws Exception {
+		if(!expression_start())
+			return; // epsilon rule
+
+		expression();
+		more_expressions();
+	}
+
+
+	private void more_expressions() throws Exception {
+		if(!match(TokenCode.COMMA))
+			return; // epsilon rule
+
+		next_token();
+		expression();
+		more_expressions();
+	}
+
+	private void expression() throws Exception {
+		simple_expression();
+		optional_relop();
+	}
+
+	private void optional_relop() throws Exception {
+		if(!match(TokenCode.RELOP))
+			return; // epsilon rule
+
+		next_token();
+		simple_expression();
+	}
+
+	private void simple_expression() throws Exception {
+		// sign rule
+		if(match(OpType.PLUS) || match(OpType.MINUS)) {
+			sign();
+			term();
+			optional_addops();
+		} else {
+			term();
+			optional_addops();
+		}
+	}
+
+	private void optional_addops() throws Exception {
+		if(!match(TokenCode.ADDOP))
+			return; // epsilon rule
+
+		next_token();
+		term();
+		optional_addops();
+	}
+
+	private void term() throws Exception {
+		factor();
+		optional_mulop();
+	}
+
+	private void optional_mulop() throws Exception {
+		if(!match(TokenCode.MULOP))
+			return; // epsilon rule
+
+		next_token();
+		term();
+	}
+
+	private void factor() throws Exception {
+		if(match(TokenCode.IDENTIFIER)){
+			next_token();
+			a_id();
+		}
+		else if(match(TokenCode.NUMBER)) {
+			next_token();
+		}
+		else if(match(TokenCode.LPAREN)) {
+			next_token();
+			expression();
+			expect(TokenCode.RPAREN);
+		} 
+		else if(match(TokenCode.NOT)) {
+			next_token();
+			factor();
+		} else {
+			// NEED TO DO ANYTHING?
+		}
+	}
+
+	private void variable_loc() throws Exception {
+		expect(TokenCode.IDENTIFIER);
+		opt_index();
+	}
+
+
+
+	private void a_id() throws Exception {
+		if(match(TokenCode.LPAREN)) {
+			next_token();
+			expression_list();
+			expect(TokenCode.RPAREN);
+		}
+		else {
+			opt_index();
+			a_opt_index();
+		}
+
+		
+	}
+
+	private void a_opt_index() throws Exception {
+
+		if(!match(TokenCode.INCDECOP) && !match(TokenCode.ASSIGNOP))
+			return; // epsilon rule;
+
+
+
+		if(match(TokenCode.ASSIGNOP)) {
+			next_token();
+			expression();
+		}
+		else
+			next_token();
+	}
+
+	private void opt_index() throws Exception {
+		if(!match(TokenCode.LBRACKET))
+			return; // epsilon rule
+
+		next_token();
+		expression();
+		expect(TokenCode.RBRACKET);
+
+	}
+
+	private void sign() throws Exception {
+		if(!match(OpType.PLUS) && !match(OpType.MINUS)) 
+			throw new ParseException(tokenSyntaxError(TokenCode.ADDOP));
+		
+		next_token();
+	}
+
+
+
+
+
+
 	private boolean expect(TokenCode code) throws Exception {
+
 		if(currentToken.getTokenCode() == code) {
 			next_token();
 			return true;
@@ -158,14 +377,26 @@ public class Parser{
 		//return false;
 	}
 
-	private boolean match(TokenCode code) {
-		if (currentToken.getTokenCode() == code)
+	private boolean expect(OpType opType) throws Exception {
+		if(currentToken.getOpType() == opType) {
+			next_token();
 			return true;
-		return false;
+		}
+		errorList.add(new ParseError("error", currentToken));
+		throw new ParseException(tokenSyntaxError(opType));
+		//return false;
+	}
 
+	private boolean match(TokenCode code) {
+		return currentToken.getTokenCode() == code;
+	}
+
+	private boolean match(OpType opType) {
+		return currentToken.getOpType() == opType;
 	}
 
 	private void next_token() throws Exception {
+		previous = currentToken;
 		currentToken = lexer.yylex();
 	}
 
@@ -179,8 +410,25 @@ public class Parser{
 			|| currentToken.getTokenCode() == TokenCode.LBRACE;
 	}
 
+	private boolean expression_start() {
+		return currentToken.getTokenCode() == TokenCode.IDENTIFIER
+			|| currentToken.getTokenCode() == TokenCode.NUMBER
+			|| currentToken.getTokenCode() == TokenCode.LPAREN
+			|| currentToken.getTokenCode() == TokenCode.NOT
+			|| currentToken.getOpType() == OpType.PLUS
+			|| currentToken.getOpType() == OpType.MINUS;
+	}
+
 	private String tokenSyntaxError(TokenCode expect) {
-		int line = currentToken.getLine();
+		int line = previous.getLine();
+		String s = lineOutput(line, lines.get(line), 4);
+		s += messageOutput("Expected " + expect, 4);
+		s += "Actual " + currentToken.getTokenCode();
+		return s;
+	}
+
+	private String tokenSyntaxError(OpType expect) {
+		int line = previous.getLine();
 		String s = lineOutput(line, lines.get(line), 4);
 		s += messageOutput("Expected " + expect, 4);
 		s += "Actual " + currentToken.getTokenCode();
