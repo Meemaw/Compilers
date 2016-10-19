@@ -31,7 +31,13 @@ public class Parser{
 		this.errorList =  new ArrayList<>();
 		this.lines = lines;
 
-		statement_recovery_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.RBRACE}));
+		statement_recovery_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON,
+																			TokenCode.RBRACE,
+																			TokenCode.IF,
+																			TokenCode.FOR,
+																			TokenCode.BREAK,
+																			TokenCode.CONTINUE,
+																			TokenCode.LBRACE}));
 		static_semicolon_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.STATIC}));
 		semicolon_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON}));
 
@@ -211,13 +217,20 @@ public class Parser{
 
 	private void statement_list() throws IOException, ParseException {
 		if(statement_start())
-			statement();
+			try {
+				statement();
+			} catch (ParseException e) {
+				consume_all_up_to(statement_recovery_set);
+			}
 		else if (match(TokenCode.RBRACE))
 			return;  // epsilon rule
+		else if(currentToken.getTokenCode() == TokenCode.ERR_ILL_CHAR) {
+			errorList.add(new ParseError("Invalid character", currentToken));
+			consume_all_up_to(statement_recovery_set);
+		}
 		else {
 			errorList.add(new ParseError("error: not a statement" , currentToken));
 			consume_all_up_to(statement_recovery_set);
-			throw new ParseException();
 		}
 
 		statement_list();
@@ -231,23 +244,31 @@ public class Parser{
 		}
 		else if(match(TokenCode.IF)) {
 			next_token();
-			expect(TokenCode.LPAREN);
-			expression();
-			expect(TokenCode.RPAREN);
+			try {
+				expect(TokenCode.LPAREN);
+				expression();
+				expect(TokenCode.RPAREN);
+			} catch (ParseException e) {
+				consume_all_up_to(lbrace_set);
+			}
 			statement_block();
 			optional_else();
 		}
 		else if(match(TokenCode.FOR)) {
 			next_token();
-			expect(TokenCode.LPAREN);
-			variable_loc();
-			expect(TokenCode.ASSIGNOP);
-			expression();
-			expect(TokenCode.SEMICOLON);
-			expression();
-			expect(TokenCode.SEMICOLON);
-			incr_decr_var();
-			expect(TokenCode.RPAREN);
+			try {
+				expect(TokenCode.LPAREN);
+				variable_loc();
+				expect(TokenCode.ASSIGNOP);
+				expression();
+				expect(TokenCode.SEMICOLON);
+				expression();
+				expect(TokenCode.SEMICOLON);
+				incr_decr_var();
+				expect(TokenCode.RPAREN);
+			} catch (ParseException e) {
+				consume_all_up_to(lbrace_set);
+			}
 			statement_block();
 		}
 		else if(match(TokenCode.RETURN)) {
@@ -315,10 +336,11 @@ public class Parser{
 	}
 
 	private void expression_list() throws IOException, ParseException {
-		if(!expression_start())
+		if(match(TokenCode.RPAREN))
 			return; // epsilon rule
+		else
+			expression();
 
-		expression();
 		more_expressions();
 	}
 
@@ -391,6 +413,10 @@ public class Parser{
 		else if(match(TokenCode.NOT)) {
 			next_token();
 			factor();
+		}
+		else if(match(TokenCode.ERR_ILL_CHAR)) {
+			errorList.add(new ParseError("Invalid character", currentToken));
+			throw new ParseException();
 		} else {
 			errorList.add(new ParseError("error: expression expected", currentToken));
 			throw new ParseException();

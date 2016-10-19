@@ -22,6 +22,8 @@ class Program {
         else {
             return fibonacci(n1 - 1) + fibonacci(n1 - 2);
         }
+
+        a = a + 5;
     }
 
     static int average(real n1, real n2, real n3)
