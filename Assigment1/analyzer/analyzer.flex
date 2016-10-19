@@ -19,7 +19,7 @@ import analyzer.OpType;
 // Custom java code there
 %{
 	private Token token(DataType dt, TokenCode tc,  OpType ot) {
-		return new Token(dt, tc, ot, null, yyline, yycolumn);
+		return new Token(dt, tc, ot, entry(yytext()), yyline, yycolumn);
 	}
 
 	private Token token(DataType dt, TokenCode tc, OpType ot, SymbolTableEntry ste) {
@@ -102,9 +102,9 @@ Real = {Digits}{Optional_fraction}{Optional_exponent}
 "return" { return token(DataType.KEYWORD, TokenCode.RETURN, OpType.NONE); }
 "continue" { return token(DataType.KEYWORD, TokenCode.CONTINUE, OpType.NONE); }
 
-{Id} { return token(DataType.ID, TokenCode.IDENTIFIER, OpType.NONE, entry(yytext())); }
-{Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE, entry(yytext())); }
-{Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE, entry(yytext()));}
+{Id} { return token(DataType.ID, TokenCode.IDENTIFIER, OpType.NONE); }
+{Int} { return token(DataType.INT, TokenCode.NUMBER, OpType.NONE); }
+{Real} { return token(DataType.REAL, TokenCode.NUMBER, OpType.NONE);}
 {Comment} { /* Ignore comment */ }
 
 //. {  System.out.println("Unknown(" + yytext() +")"); }
