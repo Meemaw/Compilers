@@ -38,7 +38,7 @@ public class Compiler {
 			ParseError current = error_list.get(i);
 			int lineNumber = current.getToken().getLine();
 			int columnNumber = current.getToken().getColumn();
-			String line = lines.get(lineNumber);
+			String line = lines.get(lineNumber) + 1;
 			String leftRemoved = line.replaceAll("^\\s+", "");
 			int diff = line.length() - leftRemoved.length();
 
