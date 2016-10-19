@@ -12,12 +12,12 @@ public class Compiler {
 			System.out.println("Please provide a filename!");
 			return;
 		}
-		
+
 		String fileName = args[0];
 		Path filePath = Paths.get(fileName);
 		List<String> lines = Files.readAllLines(filePath, Charset.forName("UTF-8"));
 
-		
+
 		Lexer lexer = new Lexer(new FileReader(fileName));
 		SymbolTable table = new SymbolTable();
 
@@ -31,7 +31,7 @@ public class Compiler {
 			System.out.println("No errors\n");
 			return;
 		}
-		
+
 
 		// print errors
 		for(int i = 0; i < error_list.size(); i++) {
@@ -57,6 +57,31 @@ public class Compiler {
 		return String.format("%1$" + formatLength + "s", "^") + " " + message;
 	}
 
+
+/*
+	private String tokenSyntaxError(TokenCode expect) {
+		int line = previousToken.getLine();
+		String s = lineOutput(line, lines.get(line), 4);
+		s += messageOutput("Expected " + expect, 4);
+		s += "Actual " + currentToken.getTokenCode();
+		return s;
+	}
+
+	private String tokenSyntaxError(OpType expect) {
+		int line = previousToken.getLine();
+		String s = lineOutput(line, lines.get(line), 4);
+		s += messageOutput("Expected " + expect, 4);
+		s += "Actual " + currentToken.getTokenCode();
+		return s;
+	}
+
+	private String lineOutput(int lineNumber, String line, int formatLength) {
+		return String.format("%1$" + formatLength + "d", lineNumber) + " : " + line + "\n" ;
+	}
+
+	private String messageOutput(String message, int formatLength) {
+		return String.format("%1$" + formatLength + "s", "^") + " " + message + "\n";
+	}*/
 
 
 }

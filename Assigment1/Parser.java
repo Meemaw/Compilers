@@ -14,7 +14,7 @@ public class Parser{
 	private SymbolTable symbolTable;
 	private ArrayList<ParseError> errorList;
 	private Token currentToken;
-	private Token previous;
+	private Token previousToken;
 	private List<String> lines;
 
 	public Parser(Lexer lexer, SymbolTable symbolTable, List<String> lines) {
@@ -105,8 +105,15 @@ public class Parser{
 		expect(TokenCode.STATIC);
 		if (type() != DataType.NOT_A_TYPE)
 			next_token();
-		else
-			throw new ParseException(tokenSyntaxError(TokenCode.STATIC));
+		else {
+			// java: "error: invalid method declaration; return type required"
+			errorList.add(new ParseError("error: invalid method declaration; return type required", currentToken));
+
+			// TODO: consume all tokens up to token that belongs to FOLLOW(method_declaration)
+
+			throw new ParseException();
+		}
+
 
 		expect(TokenCode.IDENTIFIER);
 		expect(TokenCode.LPAREN);
@@ -139,7 +146,7 @@ public class Parser{
 		if (type() == DataType.INT || type() == DataType.REAL)
 			next_token();
 		else
-			throw new ParseException(tokenSyntaxError(TokenCode.INT));
+			throw new ParseException();
 
 		expect(TokenCode.IDENTIFIER);
 	}
@@ -320,7 +327,8 @@ public class Parser{
 			next_token();
 			factor();
 		} else {
-			// NEED TO DO ANYTHING?
+			errorList.add(new ParseError("error: expression expected", currentToken));
+			throw new ParseException();
 		}
 	}
 
@@ -352,7 +360,7 @@ public class Parser{
 
 	private void sign() throws Exception {
 		if(!match(OpType.PLUS) && !match(OpType.MINUS))
-			throw new ParseException(tokenSyntaxError(TokenCode.ADDOP));
+			throw new ParseException();
 
 		next_token();
 	}
@@ -368,9 +376,11 @@ public class Parser{
 			next_token();
 			return true;
 		}
-		errorList.add(new ParseError("error", currentToken));
-		throw new ParseException(tokenSyntaxError(code));
-		//return false;
+		if (code == TokenCode.SEMICOLON) // expected semicolon
+			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), previousToken, true));
+		else
+			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
+		throw new ParseException();
 	}
 
 	private boolean match(TokenCode code) {
@@ -382,7 +392,7 @@ public class Parser{
 	}
 
 	private void next_token() throws Exception {
-		previous = currentToken;
+		previousToken = currentToken;
 		currentToken = lexer.yylex();
 	}
 
@@ -405,34 +415,11 @@ public class Parser{
 			|| currentToken.getOpType() == OpType.MINUS;
 	}
 
-	private String tokenSyntaxError(TokenCode expect) {
-		int line = previous.getLine();
-		String s = lineOutput(line, lines.get(line), 4);
-		s += messageOutput("Expected " + expect, 4);
-		s += "Actual " + currentToken.getTokenCode();
-		return s;
-	}
-
-	private String tokenSyntaxError(OpType expect) {
-		int line = previous.getLine();
-		String s = lineOutput(line, lines.get(line), 4);
-		s += messageOutput("Expected " + expect, 4);
-		s += "Actual " + currentToken.getTokenCode();
-		return s;
-	}
-
-	private String lineOutput(int lineNumber, String line, int formatLength) {
-		return String.format("%1$" + formatLength + "d", lineNumber) + " : " + line + "\n" ;
-	}
-
-	private String messageOutput(String message, int formatLength) {
-		return String.format("%1$" + formatLength + "s", "^") + " " + message + "\n";
-	}
 
 	private void expectIdentifierProgram(TokenCode token) throws Exception {
-		if(currentToken.getTokenCode() != token) throw new ParseException(TokenCode.IDENTIFIER + "");
-		if(!currentToken.getSymbolTableEntry().getLexeme().equals("Program")) 
-			throw new ParseException("Identifier Program");
+		if(currentToken.getTokenCode() != token) throw new ParseException();
+		if(!currentToken.getSymbolTableEntry().getLexeme().equals("Program"))
+			throw new ParseException();
 		next_token();
 	}
 
