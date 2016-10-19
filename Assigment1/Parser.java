@@ -20,10 +20,9 @@ public class Parser{
 	static private HashSet statement_recovery_set;
 	static private HashSet static_semicolon_set;
 	static private HashSet semicolon_set;
-	static private HashSet rbrace_set;
 	static private HashSet static_set;
-	static private HashSet lparen_set;
-	static private HashSet lbrace_set;
+	static private HashSet lparen_set, rparen_set;
+	static private HashSet lbrace_set, rbrace_set;
 
 
 	public Parser(Lexer lexer, SymbolTable symbolTable, List<String> lines) {
@@ -35,10 +34,12 @@ public class Parser{
 		statement_recovery_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.RBRACE}));
 		static_semicolon_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.STATIC}));
 		semicolon_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON}));
-		rbrace_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.RBRACE}));
+
 		static_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.STATIC}));
 		lparen_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.LPAREN}));
+		rparen_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.RBRACE}));
 		lbrace_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.LBRACE}));
+		rbrace_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.RBRACE}));
 	}
 
 	public ArrayList<ParseError> parse() throws IOException {
@@ -66,7 +67,7 @@ public class Parser{
 		expect(TokenCode.RBRACE);
 	}
 
-	private void variable_declarations(boolean method_context) throws IOException {
+	private void variable_declarations(boolean method_context) throws IOException, ParseException {
 		if (!method_context && match(TokenCode.STATIC)) {
 			return; // epsilon rule
 		}
@@ -126,7 +127,7 @@ public class Parser{
 		}
 	}
 
-	private void method_declarations() throws IOException {
+	private void method_declarations() throws IOException, ParseException {
 		try {
 			method_declaration();
 
@@ -183,15 +184,13 @@ public class Parser{
 		parameter();
 
 		if(!match(TokenCode.COMMA) && !match(TokenCode.RPAREN)) {
-			System.out.println("HERE!");
 			expect(TokenCode.COMMA);
-
 		}
 
 		if (match(TokenCode.COMMA)) {
 			next_token();
 			if(match(TokenCode.RPAREN)) {
-				errorList.add(new ParseError("error: invalid parameters declaration; unexpected token" , previousToken));
+				errorList.add(new ParseError("error: illegal start of type" , currentToken));
 				throw new ParseException();
 			}
 			parameters();
@@ -202,7 +201,7 @@ public class Parser{
 		if (type() == DataType.INT || type() == DataType.REAL)
 			next_token();
 		else {
-			errorList.add(new ParseError("error: invalid parameters declaration; expected type" , previousToken));
+			errorList.add(new ParseError("error: invalid parameters declaration; expected type" , currentToken));
 			throw new ParseException();
 		}
 
@@ -436,13 +435,15 @@ public class Parser{
 
 
 
-	private boolean expect(TokenCode code) throws IOException, ParseException {
+	private void expect(TokenCode code) throws IOException, ParseException {
 		if(currentToken.getTokenCode() == code) {
 			next_token();
-			return true;
+			return;
 		}
 		if(currentToken.getTokenCode() == TokenCode.ERR_ILL_CHAR)
 			errorList.add(new ParseError("Invalid character", currentToken));
+		else if(currentToken.getTokenCode() == TokenCode.EOF)
+			errorList.add(new ParseError("error: reached end of file while parsing", previousToken, true));
 		else if (code == TokenCode.SEMICOLON || code == TokenCode.COMMA) // expected semicolon
 			errorList.add(new ParseError(String.format("error: %s expected", code.stringifyTokenCode()), previousToken, true));
 		else
@@ -458,7 +459,7 @@ public class Parser{
 		return currentToken.getOpType() == opType;
 	}
 
-	private void next_token() throws IOException {
+	private void next_token() throws IOException,ParseException {
 		previousToken = currentToken;
 		currentToken = lexer.yylex();
 	}
@@ -483,7 +484,7 @@ public class Parser{
 	}
 
 
-	private void expectIdentifierProgram(TokenCode code) throws IOException, ParseException {
+	private void expectIdentifierProgram(TokenCode code,) throws IOException, ParseException {
 		if(currentToken.getTokenCode() != code) {
 			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
 			throw new ParseException();
@@ -496,12 +497,20 @@ public class Parser{
 		else next_token();
 	}
 
-	private void consume_all_up_to(Set <TokenCode> token_set) throws IOException {
+	private void consume_all_up_to(Set <TokenCode> token_set) throws IOException, ParseException {
 		while (!token_set.contains(currentToken.getTokenCode())) {
+			if (match(TokenCode.EOF)) {
+				throw new ParseException();
+			}
 			next_token();
+			if (match(TokenCode.LPAREN) && !token_set.contains(TokenCode.LPAREN)) {
+				consume_all_up_to(rparen_set);
+			}
+			else if (match(TokenCode.LBRACE) && !token_set.contains(TokenCode.LBRACE)) {
+				consume_all_up_to(rbrace_set);
+			}
 		}
 		if (match(TokenCode.SEMICOLON))
 			next_token();
 	}
-
 }

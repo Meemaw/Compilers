@@ -36,9 +36,9 @@ public class Compiler {
 		// print errors
 		for(int i = 0; i < error_list.size(); i++) {
 			ParseError current = error_list.get(i);
-			int lineNumber = current.getToken().getLine();
+			int lineNumber = current.getToken().getLine() + 1;
 			int columnNumber = current.getToken().getColumn();
-			String line = lines.get(lineNumber) + 1;
+			String line = lines.get(lineNumber - 1);
 			String leftRemoved = line.replaceAll("^\\s+", "");
 			int diff = line.length() - leftRemoved.length();
 
@@ -59,9 +59,9 @@ public class Compiler {
 		String s = "";
 		for(int i = 0; i < 7; i++) s += " "; // default whitespaces
 
-		if(pointAfterToken) 
+		if(pointAfterToken)
 			for(int i = 0; i < columnNumber - diff + token.getSymbolTableEntry().getLexeme().length(); i++) s+= " "; // go to end of the line
-		else 
+		else
 			for(int i = 0; i < columnNumber - diff; i++) s+= " "; // whitespaces token column
 
 		return s + "^ " + message;

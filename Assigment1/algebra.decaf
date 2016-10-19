@@ -1,16 +1,18 @@
 class Program {
-    
+
     static int gcd(int a, int b, int c)
     {
+
         a=1224.3;
+
         if(2 == 2)
         {
             {
                 a = 2;
             }
-            
+
         }
-        return;
+        return a;
     }
     static int fibonacci(int n1) // Find n-th Fibonacci number.
     {
@@ -21,7 +23,7 @@ class Program {
             return fibonacci(n1 - 1) + fibonacci(n1 - 2);
         }
     }
-    
+
     static int average(real n1, real n2, real n3)
     {
         real sum;
@@ -29,8 +31,8 @@ class Program {
         return sum;
     }
 
-    static int empty(int a) {
-        int b;
+    static int empty() {
+
     }
 
     static int random() {

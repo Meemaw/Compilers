@@ -1,18 +1,18 @@
 /* A program without parsing errors */
 
-class Program { 
+class Program {
     int x;
     real y;
 
-    static real test (real x) { 
+    static real test (real x, int i) {
         real t[10];
         int i;
 
-        t[0] = -2.0 * x; 
+        t[0] = -2.0 * x;
         for(i=1;i<10;i++) {
           t[i] = -2.0 * t[i-1];
         }
-        return t[9]; 
+        return t[9];
     }
 
     static void main() {
@@ -25,6 +25,6 @@ class Program {
         else {
           y = test(3.3);
         }
-        x = x + 2; 
+        x = x + 2;
     }
 }
