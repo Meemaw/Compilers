@@ -152,7 +152,7 @@ public class Parser{
 		else if (match(TokenCode.IDENTIFIER)) {
 			// java: "error: invalid method declaration; return type required"
 			errorList.add(new ParseError("error: invalid method declaration; return type required", currentToken));
-			next_token();
+			consume_all_up_to(lparen_set);
 		}
 		else if (match(TokenCode.LPAREN)) {
 		}
@@ -179,21 +179,14 @@ public class Parser{
 
 	private void parameters() throws IOException, ParseException {
 		if(match(TokenCode.RPAREN)) return;
-		if(type() == DataType.INT || type() == DataType.REAL) {
-			// handle parameters
-		} else if(match(TokenCode.IDENTIFIER)) {
-			errorList.add(new ParseError("error: invalid parameters declaration; type expected" , currentToken));
-			throw new ParseException();
-		} else if(match(TokenCode.LBRACE)) {
-			expect(TokenCode.RPAREN);
-			throw new ParseException();
-		}
-		else {
-			errorList.add(new ParseError("error: invalid parameters declaration; unexpected token" , currentToken));
-			throw new ParseException();
-		}
 
 		parameter();
+
+		if(!match(TokenCode.COMMA) && !match(TokenCode.RPAREN)) {
+			System.out.println("HERE!");
+			expect(TokenCode.COMMA);
+
+		}
 
 		if (match(TokenCode.COMMA)) {
 			next_token();
@@ -208,8 +201,10 @@ public class Parser{
 	private void parameter() throws IOException, ParseException {
 		if (type() == DataType.INT || type() == DataType.REAL)
 			next_token();
-		else
+		else {
+			errorList.add(new ParseError("error: invalid parameters declaration; expected type" , previousToken));
 			throw new ParseException();
+		}
 
 		expect(TokenCode.IDENTIFIER);
 	}
@@ -448,7 +443,7 @@ public class Parser{
 		}
 		if(currentToken.getTokenCode() == TokenCode.ERR_ILL_CHAR)
 			errorList.add(new ParseError("Invalid character", currentToken));
-		else if (code == TokenCode.SEMICOLON) // expected semicolon
+		else if (code == TokenCode.SEMICOLON || code == TokenCode.COMMA) // expected semicolon
 			errorList.add(new ParseError(String.format("error: %s expected", code.stringifyTokenCode()), previousToken, true));
 		else
 			errorList.add(new ParseError(String.format("error: %s expected", code.stringifyTokenCode()), currentToken));
