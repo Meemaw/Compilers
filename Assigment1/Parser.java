@@ -484,7 +484,7 @@ public class Parser{
 	}
 
 
-	private void expectIdentifierProgram(TokenCode code,) throws IOException, ParseException {
+	private void expectIdentifierProgram(TokenCode code) throws IOException, ParseException {
 		if(currentToken.getTokenCode() != code) {
 			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
 			throw new ParseException();
