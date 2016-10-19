@@ -131,9 +131,11 @@ public class Parser{
 		if(match(TokenCode.RPAREN)) return;
 		if(type() == DataType.INT || type() == DataType.REAL) {
 			// handle parameters
-		}
-		else if(match(TokenCode.IDENTIFIER)) {
+		} else if(match(TokenCode.IDENTIFIER)) {
 			errorList.add(new ParseError("error: invalid parameters declaration; type expected" , currentToken));
+			throw new ParseException();
+		} else if(match(TokenCode.LBRACE)) {
+			expect(TokenCode.RPAREN);
 			throw new ParseException();
 		}
 		else {

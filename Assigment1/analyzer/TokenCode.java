@@ -24,6 +24,13 @@ public enum TokenCode {
 				return "return";
 			case RBRACE:
 				return "}";
+			case LBRACE:
+				return "{";
+			case RPAREN:
+				return ")";
+			case LPAREN:
+				return "(";
+
 
 			//case NOT:
 			// we won't probably expect "NOT" token anywhere, so put here only tokens we need to stringify like braces

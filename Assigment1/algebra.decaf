@@ -17,7 +17,7 @@ class Program {
         if ((n1 == 1) || (n1 == 2)) {
             return gcd(n1, 1, 2);
         }
-        els {
+        else {
             return fibonacci(n1 - 1) + fibonacci(n1 - 2);
         }
     }
@@ -29,8 +29,8 @@ class Program {
         return sum;
     }
 
-    static int empty() {
-        
+    static int empty(int a) {
+        int b;
     }
 
     static int random() {
