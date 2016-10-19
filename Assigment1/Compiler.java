@@ -39,9 +39,12 @@ public class Compiler {
 			int lineNumber = current.getToken().getLine();
 			int columnNumber = current.getToken().getColumn();
 			String line = lines.get(lineNumber);
+			String leftRemoved = line.replaceAll("^\\s+", "");
+			int diff = line.length() - leftRemoved.length();
 
-			System.out.println(lineOutput(lineNumber, line.replace("\t", " "), 4));
-			System.out.println(messageOutput(current.getMessage(), columnNumber, current.getPointAfterToken(), line));
+
+			System.out.println(lineOutput(lineNumber, leftRemoved, 4));
+			System.out.println(messageOutput(current.getMessage(), columnNumber, current.getPointAfterToken(), leftRemoved, diff, current.getToken()));
 		}
 
 		System.out.println("Number of errors: " +error_list.size());
@@ -52,13 +55,14 @@ public class Compiler {
 		return String.format("%1$" + formatLength + "d", lineNumber) + " : " + line;
 	}
 
-	private static String messageOutput(String message, int columnNumber, boolean pointAfterToken, String line) {
+	private static String messageOutput(String message, int columnNumber, boolean pointAfterToken, String line, int diff, Token token) {
 		String s = "";
 		for(int i = 0; i < 7; i++) s += " "; // default whitespaces
+
 		if(pointAfterToken) 
-			for(int i = 0; i < line.length(); i++) s+= " "; // go to end of the line
+			for(int i = 0; i < columnNumber - diff + token.getSymbolTableEntry().getLexeme().length(); i++) s+= " "; // go to end of the line
 		else 
-			for(int i = 0; i < columnNumber; i++) s+= " "; // whitespaces token column
+			for(int i = 0; i < columnNumber - diff; i++) s+= " "; // whitespaces token column
 
 		return s + "^ " + message;
 	}
