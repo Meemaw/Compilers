@@ -17,47 +17,82 @@ public class Parser{
 	private Token previousToken;
 	private List<String> lines;
 
+	static private HashSet statement_recovery_set;
+	static private HashSet static_semicolon_set;
+	static private HashSet semicolon_set;
+	static private HashSet rbrace_set;
+	static private HashSet static_set;
+	static private HashSet lparen_set;
+	static private HashSet lbrace_set;
+
+
 	public Parser(Lexer lexer, SymbolTable symbolTable, List<String> lines) {
 		this.symbolTable = symbolTable;
 		this.lexer = lexer;
 		this.errorList =  new ArrayList<>();
 		this.lines = lines;
+
+		statement_recovery_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.RBRACE}));
+		static_semicolon_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.STATIC}));
+		semicolon_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON}));
+		rbrace_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.RBRACE}));
+		static_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.STATIC}));
+		lparen_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.LPAREN}));
+		lbrace_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.LBRACE}));
 	}
 
-	public ArrayList<ParseError> parse() throws Exception {
+	public ArrayList<ParseError> parse() throws IOException {
 		try {
 			program();
 		}
 		catch (ParseException e) {
+			// do nothing
 		}
 
 		return errorList;
 	}
 
 
-	private void program() throws Exception {
+	private void program() throws IOException, ParseException {
 		next_token();
 
 		expect(TokenCode.CLASS);
 		expectIdentifierProgram(TokenCode.IDENTIFIER);
 		expect(TokenCode.LBRACE);
 
-		variable_declarations();
+		variable_declarations(false);
 		method_declarations();
 
 		expect(TokenCode.RBRACE);
 	}
 
-	private void variable_declarations() throws Exception {
-		if (type() != DataType.INT && type() != DataType.REAL)
+	private void variable_declarations(boolean method_context) throws IOException {
+		if (!method_context && match(TokenCode.STATIC)) {
 			return; // epsilon rule
+		}
+		if (method_context && (statement_start() || match(TokenCode.RBRACE))) {
+			return; // epsilon rule
+		}
 
-		next_token(); // consume INT | REAL
-		variable_list();
+		try {
+			if (type() != DataType.INT && type() != DataType.REAL) {
+				errorList.add(new ParseError("error: type expected" , currentToken));
+				throw new ParseException();
+			}
 
-		expect(TokenCode.SEMICOLON);
+			next_token(); // consume INT | REAL
+			variable_list();
 
-		variable_declarations();
+			expect(TokenCode.SEMICOLON);
+		} catch (ParseException e) {
+			if (method_context)
+				consume_all_up_to(semicolon_set);
+			else
+				consume_all_up_to(static_semicolon_set);
+
+		}
+
+		variable_declarations(method_context);
 	}
 
 	// return also void as a type
@@ -71,8 +106,8 @@ public class Parser{
 		return DataType.NOT_A_TYPE;
 	}
 
-	// method implement also more_variables rule
-	private void variable_list() throws Exception {
+	// this method implement also more_variables (nonterminal) rule
+	private void variable_list() throws IOException, ParseException {
 		variable();
 
 		if (match(TokenCode.COMMA)) {
@@ -81,9 +116,8 @@ public class Parser{
 		}
 	}
 
-	private void variable() throws Exception {
+	private void variable() throws IOException, ParseException {
 		expect(TokenCode.IDENTIFIER);
-
 
 		if (match(TokenCode.LBRACKET)) {
 			next_token();
@@ -92,42 +126,58 @@ public class Parser{
 		}
 	}
 
-	private void method_declarations() throws Exception {
-		method_declaration();
+	private void method_declarations() throws IOException {
+		try {
+			method_declaration();
 
-		if (match(TokenCode.STATIC)) {
-			method_declarations();
+			if (!match(TokenCode.STATIC)) {
+				return; // epsilon rule
+			}
+		} catch (ParseException e) {
+			consume_all_up_to(static_set);
 		}
+		method_declarations();
 	}
 
-	private void method_declaration() throws Exception {
+	private void method_declaration() throws IOException, ParseException {
 		expect(TokenCode.STATIC);
-		if (type() != DataType.NOT_A_TYPE)
+		if (type() != DataType.NOT_A_TYPE) {
 			next_token();
-		else {
+			try {
+				expect(TokenCode.IDENTIFIER);
+			} catch (ParseException e) {
+				consume_all_up_to(lparen_set);
+			}
+		}
+		else if (match(TokenCode.IDENTIFIER)) {
 			// java: "error: invalid method declaration; return type required"
 			errorList.add(new ParseError("error: invalid method declaration; return type required", currentToken));
-
-			// TODO: consume all tokens up to token that belongs to FOLLOW(method_declaration)
+			next_token();
+		}
+		else if (match(TokenCode.LPAREN)) {
+		}
+		else {
 			throw new ParseException();
 		}
 
-
-		expect(TokenCode.IDENTIFIER);
 		expect(TokenCode.LPAREN);
 
-		parameters();
+		try {
+			parameters();
+			expect(TokenCode.RPAREN);
+		} catch (ParseException e) {
+			consume_all_up_to(lbrace_set);
+		}
 
-		expect(TokenCode.RPAREN);
 		expect(TokenCode.LBRACE);
 
-		variable_declarations();
+		variable_declarations(true);
 		statement_list();
 
 		expect(TokenCode.RBRACE);
 	}
 
-	private void parameters() throws Exception {
+	private void parameters() throws IOException, ParseException {
 		if(match(TokenCode.RPAREN)) return;
 		if(type() == DataType.INT || type() == DataType.REAL) {
 			// handle parameters
@@ -155,7 +205,7 @@ public class Parser{
 		}
 	}
 
-	private void parameter() throws Exception {
+	private void parameter() throws IOException, ParseException {
 		if (type() == DataType.INT || type() == DataType.REAL)
 			next_token();
 		else
@@ -165,16 +215,21 @@ public class Parser{
 	}
 
 
-	private void statement_list() throws Exception {
-		if(!statement_start())
+	private void statement_list() throws IOException, ParseException {
+		if(statement_start())
+			statement();
+		else if (match(TokenCode.RBRACE))
 			return;  // epsilon rule
+		else {
+			errorList.add(new ParseError("error: not a statement" , currentToken));
+			consume_all_up_to(statement_recovery_set);
+			throw new ParseException();
+		}
 
-		statement();
 		statement_list();
-
 	}
 
-	private void statement() throws Exception {
+	private void statement() throws IOException, ParseException {
 		if(match(TokenCode.IDENTIFIER)) {
 			next_token();
 			assign_incdec_func_call();
@@ -210,13 +265,16 @@ public class Parser{
 			next_token();
 			expect(TokenCode.SEMICOLON);
 		}
-		else {
+		else if (match(TokenCode.LBRACE)){
 			statement_block();
+		}
+		else {
+			throw new IOException("something is wrong");
 		}
 	}
 
 
-	private void assign_incdec_func_call() throws Exception {
+	private void assign_incdec_func_call() throws IOException, ParseException {
 		if(match(TokenCode.LPAREN)) {
 			next_token();
 			expression_list();
@@ -228,7 +286,7 @@ public class Parser{
 		}
 	}
 
-	private void assign_or_inc() throws Exception {
+	private void assign_or_inc() throws IOException, ParseException {
 		if(match(TokenCode.INCDECOP))
 			next_token();
 		else {
@@ -237,32 +295,32 @@ public class Parser{
 		}
 	}
 
-	private void optional_expression() throws Exception {
+	private void optional_expression() throws IOException, ParseException {
 		if(!expression_start())
 			return; // epsilon rule;
 
 		expression();
 	}
 
-	private void statement_block() throws Exception {
+	private void statement_block() throws IOException, ParseException {
 		expect(TokenCode.LBRACE);
 		statement_list();
 		expect(TokenCode.RBRACE);
 	}
 
-	private void incr_decr_var() throws Exception {
+	private void incr_decr_var() throws IOException, ParseException {
 		variable_loc();
 		expect(TokenCode.INCDECOP);
 	}
 
-	private void optional_else() throws Exception {
+	private void optional_else() throws IOException, ParseException {
 		if(!match(TokenCode.ELSE))
 			return;  // epsilon rule
 		next_token();
 		statement_block();
 	}
 
-	private void expression_list() throws Exception {
+	private void expression_list() throws IOException, ParseException {
 		if(!expression_start())
 			return; // epsilon rule
 
@@ -271,7 +329,7 @@ public class Parser{
 	}
 
 
-	private void more_expressions() throws Exception {
+	private void more_expressions() throws IOException, ParseException {
 		if(!match(TokenCode.COMMA))
 			return; // epsilon rule
 
@@ -280,12 +338,12 @@ public class Parser{
 		more_expressions();
 	}
 
-	private void expression() throws Exception {
+	private void expression() throws IOException, ParseException {
 		simple_expression();
 		optional_relop();
 	}
 
-	private void optional_relop() throws Exception {
+	private void optional_relop() throws IOException, ParseException {
 		if(!match(TokenCode.RELOP))
 			return; // epsilon rule
 
@@ -293,7 +351,7 @@ public class Parser{
 		simple_expression();
 	}
 
-	private void simple_expression() throws Exception {
+	private void simple_expression() throws IOException, ParseException {
 		// sign rule
 		if(match(OpType.PLUS) || match(OpType.MINUS))
 			sign();
@@ -301,7 +359,7 @@ public class Parser{
 		optional_addops();
 	}
 
-	private void optional_addops() throws Exception {
+	private void optional_addops() throws IOException, ParseException {
 		if(!match(TokenCode.ADDOP))
 			return; // epsilon rule
 
@@ -310,12 +368,12 @@ public class Parser{
 		optional_addops();
 	}
 
-	private void term() throws Exception {
+	private void term() throws IOException, ParseException {
 		factor();
 		optional_mulop();
 	}
 
-	private void optional_mulop() throws Exception {
+	private void optional_mulop() throws IOException, ParseException {
 		if(!match(TokenCode.MULOP))
 			return; // epsilon rule
 
@@ -323,7 +381,7 @@ public class Parser{
 		term();
 	}
 
-	private void factor() throws Exception {
+	private void factor() throws IOException, ParseException {
 		if(match(TokenCode.IDENTIFIER)){
 			next_token();
 			opt_array_func_call();
@@ -345,7 +403,7 @@ public class Parser{
 		}
 	}
 
-	private void opt_array_func_call() throws Exception {
+	private void opt_array_func_call() throws IOException, ParseException {
 		if(match(TokenCode.LPAREN)) {
 			next_token();
 			expression_list();
@@ -354,14 +412,14 @@ public class Parser{
 		else opt_index();
 	}
 
-	private void variable_loc() throws Exception {
+	private void variable_loc() throws IOException, ParseException {
 		expect(TokenCode.IDENTIFIER);
 		opt_index();
 	}
 
 
 
-	private void opt_index() throws Exception {
+	private void opt_index() throws IOException, ParseException {
 		if(!match(TokenCode.LBRACKET))
 			return; // epsilon rule
 		next_token();
@@ -371,7 +429,7 @@ public class Parser{
 		expect(TokenCode.RBRACKET);
 	}
 
-	private void sign() throws Exception {
+	private void sign() throws IOException, ParseException {
 		if(!match(OpType.PLUS) && !match(OpType.MINUS))
 			throw new ParseException();
 
@@ -383,16 +441,16 @@ public class Parser{
 
 
 
-	private boolean expect(TokenCode code) throws Exception {
+	private boolean expect(TokenCode code) throws IOException, ParseException {
 		if(currentToken.getTokenCode() == code) {
 			next_token();
 			return true;
 		}
-		if(currentToken.getTokenCode() == TokenCode.ERR_ILL_CHAR) 
+		if(currentToken.getTokenCode() == TokenCode.ERR_ILL_CHAR)
 			errorList.add(new ParseError("Invalid character", currentToken));
 		else if (code == TokenCode.SEMICOLON) // expected semicolon
 			errorList.add(new ParseError(String.format("error: %s expected", code.stringifyTokenCode()), previousToken, true));
-		else 
+		else
 			errorList.add(new ParseError(String.format("error: %s expected", code.stringifyTokenCode()), currentToken));
 		throw new ParseException();
 	}
@@ -405,7 +463,7 @@ public class Parser{
 		return currentToken.getOpType() == opType;
 	}
 
-	private void next_token() throws Exception {
+	private void next_token() throws IOException {
 		previousToken = currentToken;
 		currentToken = lexer.yylex();
 	}
@@ -430,7 +488,7 @@ public class Parser{
 	}
 
 
-	private void expectIdentifierProgram(TokenCode code) throws Exception {
+	private void expectIdentifierProgram(TokenCode code) throws IOException, ParseException {
 		if(currentToken.getTokenCode() != code) {
 			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
 			throw new ParseException();
@@ -443,6 +501,12 @@ public class Parser{
 		else next_token();
 	}
 
-
+	private void consume_all_up_to(Set <TokenCode> token_set) throws IOException {
+		while (!token_set.contains(currentToken.getTokenCode())) {
+			next_token();
+		}
+		if (match(TokenCode.SEMICOLON))
+			next_token();
+	}
 
 }
