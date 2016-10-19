@@ -1,0 +1,14 @@
+class Program { 
+	int i,j;
+	int a;
+
+	static int myFunc(int n, int g) {
+		n=n*2;
+		return n; 
+	}
+
+	static void main() {
+		i = myFunc(3);
+		i++;
+	}
+}

@@ -29,7 +29,6 @@ public class Parser{
 			program();
 		}
 		catch (ParseException e) {
-			errorList.add(new ParseError("Expected token ", currentToken));
 		}
 
 		return errorList;
@@ -110,7 +109,6 @@ public class Parser{
 			errorList.add(new ParseError("error: invalid method declaration; return type required", currentToken));
 
 			// TODO: consume all tokens up to token that belongs to FOLLOW(method_declaration)
-
 			throw new ParseException();
 		}
 
@@ -130,14 +128,27 @@ public class Parser{
 	}
 
 	private void parameters() throws Exception {
-
-		if (type() != DataType.INT && type() != DataType.REAL)
-			return; // epsilon rule
+		if(match(TokenCode.RPAREN)) return;
+		if(type() == DataType.INT || type() == DataType.REAL) {
+			// handle parameters
+		}
+		else if(match(TokenCode.IDENTIFIER)) {
+			errorList.add(new ParseError("error: invalid parameters declaration; type expected" , currentToken));
+			throw new ParseException();
+		}
+		else {
+			errorList.add(new ParseError("error: invalid parameters declaration; unexpected token" , currentToken));
+			throw new ParseException();
+		}
 
 		parameter();
 
 		if (match(TokenCode.COMMA)) {
 			next_token();
+			if(match(TokenCode.RPAREN)) {
+				errorList.add(new ParseError("error: invalid parameters declaration; unexpected token" , previousToken));
+				throw new ParseException();
+			}
 			parameters();
 		}
 	}
@@ -371,15 +382,16 @@ public class Parser{
 
 
 	private boolean expect(TokenCode code) throws Exception {
-
 		if(currentToken.getTokenCode() == code) {
 			next_token();
 			return true;
 		}
-		if (code == TokenCode.SEMICOLON) // expected semicolon
-			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), previousToken, true));
-		else
-			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
+		if(currentToken.getTokenCode() == TokenCode.ERR_ILL_CHAR) 
+			errorList.add(new ParseError("Invalid character", currentToken));
+		else if (code == TokenCode.SEMICOLON) // expected semicolon
+			errorList.add(new ParseError(String.format("error: %s expected", code.stringifyTokenCode()), previousToken, true));
+		else 
+			errorList.add(new ParseError(String.format("error: %s expected", code.stringifyTokenCode()), currentToken));
 		throw new ParseException();
 	}
 
@@ -416,11 +428,17 @@ public class Parser{
 	}
 
 
-	private void expectIdentifierProgram(TokenCode token) throws Exception {
-		if(currentToken.getTokenCode() != token) throw new ParseException();
-		if(!currentToken.getSymbolTableEntry().getLexeme().equals("Program"))
+	private void expectIdentifierProgram(TokenCode code) throws Exception {
+		if(currentToken.getTokenCode() != code) {
+			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
 			throw new ParseException();
-		next_token();
+		}
+		else if (!currentToken.getSymbolTableEntry().getLexeme().equals("Program")) {
+			errorList.add(new ParseError("error: Programs in Decaf are written in a single class, that should by convention be named ’Program’", currentToken));
+			throw new ParseException();
+		}
+
+		else next_token();
 	}
 
 

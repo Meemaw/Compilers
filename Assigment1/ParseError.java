@@ -25,4 +25,8 @@ public class ParseError {
 		return this.message;
 	}
 
+	public boolean getPointAfterToken() {
+		return this.point_after_token;
+	}
+
 }

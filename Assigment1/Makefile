@@ -14,6 +14,7 @@ all:
 test:
 	java -jar Parser.jar "test.decaf"
 	java -jar Parser.jar "algebra.decaf"
+	java -jar Parser.jar "err.decaf"
 
 tests:
 	@./runtest.sh Parser.jar

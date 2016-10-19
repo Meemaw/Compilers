@@ -40,12 +40,11 @@ public class Compiler {
 			int columnNumber = current.getToken().getColumn();
 			String line = lines.get(lineNumber);
 
-			System.out.println(lineOutput(lineNumber, line, 4));
-			System.out.println(messageOutput(current.getMessage(), 4));
-
-
-
+			System.out.println(lineOutput(lineNumber, line.replace("\t", " "), 4));
+			System.out.println(messageOutput(current.getMessage(), columnNumber, current.getPointAfterToken(), line));
 		}
+
+		System.out.println("Number of errors: " +error_list.size());
 
 	}
 
@@ -53,8 +52,15 @@ public class Compiler {
 		return String.format("%1$" + formatLength + "d", lineNumber) + " : " + line;
 	}
 
-	private static String messageOutput(String message, int formatLength) {
-		return String.format("%1$" + formatLength + "s", "^") + " " + message;
+	private static String messageOutput(String message, int columnNumber, boolean pointAfterToken, String line) {
+		String s = "";
+		for(int i = 0; i < 7; i++) s += " "; // default whitespaces
+		if(pointAfterToken) 
+			for(int i = 0; i < line.length(); i++) s+= " "; // go to end of the line
+		else 
+			for(int i = 0; i < columnNumber; i++) s+= " "; // whitespaces token column
+
+		return s + "^ " + message;
 	}
 
 

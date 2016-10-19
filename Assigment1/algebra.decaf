@@ -1,10 +1,8 @@
-class Algebra {
+class Program {
     
     static int gcd(int a, int b, int c)
     {
-        
         a=1224.3;
-
         if(2 == 2)
         {
             {
@@ -12,14 +10,14 @@ class Algebra {
             }
             
         }
-        return a;
+        return;
     }
     static int fibonacci(int n1) // Find n-th Fibonacci number.
     {
         if ((n1 == 1) || (n1 == 2)) {
             return gcd(n1, 1, 2);
         }
-        else {
+        els {
             return fibonacci(n1 - 1) + fibonacci(n1 - 2);
         }
     }

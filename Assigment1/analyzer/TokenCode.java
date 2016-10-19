@@ -16,6 +16,14 @@ public enum TokenCode {
 			case SEMICOLON:
 				// java: "error: ';' expected"
 				return "';'";
+			case CLASS:
+				return "class";
+			case STATIC:
+				return "static";
+			case RETURN:
+				return "return";
+			case RBRACE:
+				return "}";
 
 			//case NOT:
 			// we won't probably expect "NOT" token anywhere, so put here only tokens we need to stringify like braces
