@@ -1,20 +1,15 @@
 class Program {
 	int i,j;
-	int a;
-	real e;
+	none_such_type o;
 
-	static int myFunc(int n, int xin, int int) {
-		n=n*2;
+	static int myFunc(int n) {
+
+		n = n * 2
 		return n;
 	}
 
 	static void main() {
-	int i;
-
-
 		i = myFunc(3);
-		i++
-		{a++;}
-
+		$i++;
 	}
 }
