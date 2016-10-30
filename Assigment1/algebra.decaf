@@ -1,47 +1,7 @@
-class Program {
-
-    static int gcd(int a, int b, int c)
-    {
-
-        a=1224.3;
-
-        if(2 == 2)
-        {
-            {
-                a = 2;
-            }
-
-        }
-        return a;
-    }
-    static int fibonacci(int n1) // Find n-th Fibonacci number.
-    {
-        if ((n1 == 1) || (n1 == 2)) {
-            return gcd(n1, 1, 2);
-        }
-        else {
-            return fibonacci(n1 - 1) + fibonacci(n1 - 2);
-        }
-    }
-
-    static int average(real n1, real n2, real n3)
-    {
-        real sum;
-        sum = n1 + n2 + n3;
-        return sum;
-    }
-
-    static int empty() {
-
-    }
-
-    static int random() {
-        real t[100];
-
-        t[4] = 12 * 5 - 2 || 6 + 5 && 12;
-        {a = 5;}
-
-        a = (2+2);
-        return t[-20];
-    }
-}
+class Program { int i,j;
+none_such_type o;
+static int myFunc(int n) {
+n=n*2
+return n; }
+static void main() { i = myFunc(3); $i++;
+} }

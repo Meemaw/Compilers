@@ -1,5 +1,4 @@
 import java.io.*;
-import analyzer.*;
 
 public class LexAnal {
 

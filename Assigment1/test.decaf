@@ -5,26 +5,11 @@ class Program {
     real y;
 
     static real test (real x, int i) {
-        real t[10];
-        int i;
-
-        t[0] = -2.0 * x;
-        for(i=1;i<10;i++) {
-          t[i] = -2.0 * t[i-1];
-        }
-        return t[9];
     }
 
     static void main() {
-        x = 1;
-        y = 2.0*(3.14);
-        x++;
-        if (x>2) {
-            y = 123.45E-3;
-        }
-        else {
-          y = test(3.3);
-        }
-        x = x + 2;
+
+
+        writeln();
     }
 }

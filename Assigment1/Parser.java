@@ -2,7 +2,6 @@ import analyzer.*;
 import java.util.*;
 import java.io.IOException;
 
-
 enum DataType {
     INT, REAL, VOID, NOT_A_TYPE
 }
@@ -11,11 +10,15 @@ enum DataType {
 public class Parser{
 
 	private Lexer lexer;
-	private SymbolTable symbolTable;
+	private SymbolTable globalSymbolTable;
+	private SymbolTable localSymbolTable;
 	private ArrayList<ParseError> errorList;
 	private Token currentToken;
 	private Token previousToken;
 	private List<String> lines;
+	private CodeGenerator codeGenerator;
+	private int tempCounter;
+	private int labelCounter;
 
 	static private HashSet statement_recovery_set;
 	static private HashSet static_semicolon_set;
@@ -25,11 +28,13 @@ public class Parser{
 	static private HashSet lbrace_set, rbrace_set;
 
 
-	public Parser(Lexer lexer, SymbolTable symbolTable, List<String> lines) {
-		this.symbolTable = symbolTable;
+	public Parser(Lexer lexer, List<String> lines) {
 		this.lexer = lexer;
 		this.errorList =  new ArrayList<>();
 		this.lines = lines;
+		this.codeGenerator = new CodeGenerator();
+		this.tempCounter = 1;
+		this.labelCounter = 1;
 
 		statement_recovery_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.RBRACE}));
 		static_semicolon_set = new HashSet(Arrays.asList(new TokenCode[] {TokenCode.SEMICOLON, TokenCode.STATIC}));
@@ -45,6 +50,7 @@ public class Parser{
 	public ArrayList<ParseError> parse() throws IOException {
 		try {
 			program();
+			codeGenerator.printCode();
 		}
 		catch (ParseException e) {
 			// do nothing
@@ -55,6 +61,7 @@ public class Parser{
 
 
 	private void program() throws IOException, ParseException {
+		globalSymbolTable = new SymbolTable();
 		next_token();
 
 		expect(TokenCode.CLASS);
@@ -62,6 +69,7 @@ public class Parser{
 		expect(TokenCode.LBRACE);
 
 		variable_declarations(false);
+		codeGenerator.generate(TacCode.GOTO, null, null, new SymbolTableEntry("main"));
 		method_declarations();
 
 		expect(TokenCode.RBRACE);
@@ -141,6 +149,7 @@ public class Parser{
 	}
 
 	private void method_declaration() throws IOException, ParseException {
+		localSymbolTable = new SymbolTable();
 		expect(TokenCode.STATIC);
 		if (type() != DataType.NOT_A_TYPE) {
 			next_token();
@@ -164,7 +173,7 @@ public class Parser{
 		expect(TokenCode.LPAREN);
 
 		try {
-			parameters();
+			codeGenerator.functionParameters(parameters());
 			expect(TokenCode.RPAREN);
 		} catch (ParseException e) {
 			consume_all_up_to(lbrace_set);
@@ -176,12 +185,15 @@ public class Parser{
 		statement_list();
 
 		expect(TokenCode.RBRACE);
+		codeGenerator.generate(TacCode.RETURN, null, null, null);
+
 	}
 
-	private void parameters() throws IOException, ParseException {
-		if(match(TokenCode.RPAREN)) return;
+	private ArrayList<Token> parameters() throws IOException, ParseException {
+		ArrayList<Token> parameters = new ArrayList<>();
+		if(match(TokenCode.RPAREN)) return parameters;
 
-		parameter();
+		parameters.add(parameter());
 
 		if(!match(TokenCode.COMMA) && !match(TokenCode.RPAREN)) {
 			expect(TokenCode.COMMA);
@@ -193,19 +205,23 @@ public class Parser{
 				errorList.add(new ParseError("error: illegal start of type" , currentToken));
 				throw new ParseException();
 			}
-			parameters();
+			parameters.addAll(parameters());
 		}
+
+		return parameters;
+
 	}
 
-	private void parameter() throws IOException, ParseException {
+	private Token parameter() throws IOException, ParseException {
 		if (type() == DataType.INT || type() == DataType.REAL)
 			next_token();
 		else {
 			errorList.add(new ParseError("error: invalid parameters declaration; expected type" , currentToken));
 			throw new ParseException();
 		}
-
+		Token param = currentToken;
 		expect(TokenCode.IDENTIFIER);
+		return param;
 	}
 
 
@@ -272,7 +288,7 @@ public class Parser{
 		if(match(TokenCode.LPAREN)) {
 			next_token();
 			expression_list();
-			match(TokenCode.RPAREN);
+			expect(TokenCode.RPAREN);
 		}
 		else {
 			opt_index();
@@ -513,4 +529,21 @@ public class Parser{
 		if (match(TokenCode.SEMICOLON))
 			next_token();
 	}
+	
+
+	private SymbolTableEntry newTemp() {
+		SymbolTableEntry temp = new SymbolTableEntry("t" + this.tempCounter++);
+		localSymbolTable.add(temp);
+		codeGenerator.generate(TacCode.VAR, null, null, temp);
+		return temp;
+	}
+
+	private SymbolTableEntry newLabel() {
+		SymbolTableEntry temp = new SymbolTableEntry("lab" + this.labelCounter++);
+		localSymbolTable.add(temp);
+		return temp;
+	}
+	
+
+
 }

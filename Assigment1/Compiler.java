@@ -19,10 +19,9 @@ public class Compiler {
 
 
 		Lexer lexer = new Lexer(new FileReader(fileName));
-		SymbolTable table = new SymbolTable();
 
 
-		Parser p = new Parser(lexer,table, lines);
+		Parser p = new Parser(lexer, lines);
 
 		ArrayList<ParseError> error_list = p.parse();
 
