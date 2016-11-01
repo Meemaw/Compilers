@@ -59,7 +59,7 @@ public class Compiler {
 	private static String messageOutput(String message, int columnNumber, boolean pointAfterToken, String line, int diff, Token token) {
 		String s = "";
 		for(int i = 0; i < 7; i++) s += " "; // default whitespaces
-		int len = token.getSymbolTableEntry().getLexeme().length();
+		int len = token.getLexeme().length();
 
 		if(pointAfterToken)
 			for(int i = 0; i < columnNumber - diff + len; i++) s+= " "; // go to end of the line

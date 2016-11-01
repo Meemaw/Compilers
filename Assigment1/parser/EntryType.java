@@ -1,5 +1,5 @@
 package parser;
 
 public enum EntryType {
-	VAR, LABEL
+	VARIABLE, LABEL, FUNCTION, CONSTANT
 };

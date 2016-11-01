@@ -22,6 +22,7 @@ public class Parser{
 	private int tempCounter;
 	private int labelCounter;
 
+
 	static private HashSet statement_recovery_set;
 	static private HashSet static_semicolon_set;
 	static private HashSet semicolon_set;
@@ -71,6 +72,10 @@ public class Parser{
 
 	private void program() throws IOException, ParseException {
 		globalSymbolTable = new SymbolTable();
+		globalSymbolTable.add("writeln", new SymbolTableEntry("writeln", EntryType.FUNCTION, 1));
+		globalSymbolTable.add("write", new SymbolTableEntry("write", EntryType.FUNCTION, 1));
+		globalSymbolTable.add("0", new SymbolTableEntry("0", EntryType.CONSTANT));
+		globalSymbolTable.add("1", new SymbolTableEntry("1", EntryType.CONSTANT));
 		next_token();
 
 		expect(TokenCode.CLASS);
@@ -78,8 +83,10 @@ public class Parser{
 		expect(TokenCode.LBRACE);
 
 		variable_declarations(false);
-		codeGenerator.generate(TacCode.GOTO, null, null, new SymbolTableEntry("main"));
+		codeGenerator.generate(TacCode.GOTO, null, null, new SymbolTableEntry("main", EntryType.FUNCTION));
 		method_declarations();
+		System.out.println("Global symbol table:");
+		System.out.println(globalSymbolTable);
 
 		expect(TokenCode.RBRACE);
 	}
@@ -99,7 +106,7 @@ public class Parser{
 			}
 
 			next_token(); // consume INT | REAL
-			variable_list();
+			variable_list(method_context);
 
 			expect(TokenCode.SEMICOLON);
 		} catch (ParseException e) {
@@ -125,17 +132,27 @@ public class Parser{
 	}
 
 	// this method implement also more_variables (nonterminal) rule
-	private void variable_list() throws IOException, ParseException {
-		variable();
+	private void variable_list(boolean method_context) throws IOException, ParseException {
+		variable(method_context);
+
 
 		if (match(TokenCode.COMMA)) {
 			next_token();
-			variable_list();
+			variable_list(method_context);
 		}
 	}
 
-	private void variable() throws IOException, ParseException {
+	private void variable(boolean method_context) throws IOException, ParseException {
+		String variableName = currentToken.getLexeme();
+		SymbolTableEntry entry = new SymbolTableEntry(variableName, EntryType.VARIABLE);
+		if(method_context)
+			localSymbolTable.add(variableName,entry);
+		else
+			globalSymbolTable.add(variableName,entry);
+		codeGenerator.generate(TacCode.VAR, null, null, entry);
+
 		expect(TokenCode.IDENTIFIER);
+
 
 		if (match(TokenCode.LBRACKET)) {
 			next_token();
@@ -155,14 +172,17 @@ public class Parser{
 			consume_all_up_to(static_set);
 		}
 		method_declarations();
+
 	}
 
 	private void method_declaration() throws IOException, ParseException {
 		localSymbolTable = new SymbolTable();
 		expect(TokenCode.STATIC);
+		String name = "";
 		if (type() != DataType.NOT_A_TYPE) {
 			next_token();
 			try {
+				name = currentToken.getLexeme();
 				expect(TokenCode.IDENTIFIER);
 			} catch (ParseException e) {
 				consume_all_up_to(lparen_set);
@@ -182,7 +202,10 @@ public class Parser{
 		expect(TokenCode.LPAREN);
 
 		try {
-			codeGenerator.functionParameters(parameters());
+			ArrayList<SymbolTableEntry> params = parameters();
+			codeGenerator.functionParameters(params);
+			SymbolTableEntry function = new SymbolTableEntry(name, EntryType.FUNCTION, params.size());
+			globalSymbolTable.add(name, function);
 			expect(TokenCode.RPAREN);
 		} catch (ParseException e) {
 			consume_all_up_to(lbrace_set);
@@ -195,14 +218,15 @@ public class Parser{
 
 		expect(TokenCode.RBRACE);
 		codeGenerator.generate(TacCode.RETURN, null, null, null);
-
+		System.out.println("Local symbol table:");
+		System.out.println(localSymbolTable);
 	}
 
-	private ArrayList<Token> parameters() throws IOException, ParseException {
-		ArrayList<Token> parameters = new ArrayList<>();
-		if(match(TokenCode.RPAREN)) return parameters;
+	private ArrayList<SymbolTableEntry> parameters() throws IOException, ParseException {
+		ArrayList<SymbolTableEntry> params = new ArrayList<>();
+		if(match(TokenCode.RPAREN)) return params;
 
-		parameters.add(parameter());
+		params.add(parameter());
 
 		if(!match(TokenCode.COMMA) && !match(TokenCode.RPAREN)) {
 			expect(TokenCode.COMMA);
@@ -214,23 +238,24 @@ public class Parser{
 				errorList.add(new ParseError("error: illegal start of type" , currentToken));
 				throw new ParseException();
 			}
-			parameters.addAll(parameters());
+			params.addAll(parameters());
 		}
 
-		return parameters;
+		return params;
 
 	}
 
-	private Token parameter() throws IOException, ParseException {
+	private SymbolTableEntry parameter() throws IOException, ParseException {
 		if (type() == DataType.INT || type() == DataType.REAL)
 			next_token();
 		else {
 			errorList.add(new ParseError("error: invalid parameters declaration; expected type" , currentToken));
 			throw new ParseException();
 		}
-		Token param = currentToken;
+		SymbolTableEntry e = new SymbolTableEntry(currentToken.getLexeme(), EntryType.VARIABLE);
+		localSymbolTable.add(e.getLexeme(), e);
 		expect(TokenCode.IDENTIFIER);
-		return param;
+		return e;
 	}
 
 
@@ -262,33 +287,10 @@ public class Parser{
 			expect(TokenCode.SEMICOLON);
 		}
 		else if(match(TokenCode.IF)) {
-			next_token();
-			try {
-				expect(TokenCode.LPAREN);
-				expression();
-				expect(TokenCode.RPAREN);
-			} catch (ParseException e) {
-				consume_all_up_to(lbrace_set);
-			}
-			statement_block();
-			optional_else();
+			parse_if();
 		}
 		else if(match(TokenCode.FOR)) {
-			next_token();
-			try {
-				expect(TokenCode.LPAREN);
-				variable_loc();
-				expect(TokenCode.ASSIGNOP);
-				expression();
-				expect(TokenCode.SEMICOLON);
-				expression();
-				expect(TokenCode.SEMICOLON);
-				incr_decr_var();
-				expect(TokenCode.RPAREN);
-			} catch (ParseException e) {
-				consume_all_up_to(lbrace_set);
-			}
-			statement_block();
+			parse_for();
 		}
 		else if(match(TokenCode.RETURN)) {
 			next_token();
@@ -305,6 +307,57 @@ public class Parser{
 		else {
 			throw new IOException("something is wrong");
 		}
+	}
+
+	private void parse_if() throws IOException, ParseException {
+
+		next_token();
+
+		SymbolTableEntry labelFirst = newLabel();
+
+		try {
+			expect(TokenCode.LPAREN);
+			SymbolTableEntry exprResult = expression();
+			expect(TokenCode.RPAREN);
+			codeGenerator.generate(TacCode.EQ, exprResult, globalSymbolTable.get("0"), labelFirst);
+		} catch (ParseException e) {
+			consume_all_up_to(lbrace_set);
+		}
+
+		statement_block();
+
+
+
+		if(check_optional_else()) {
+			SymbolTableEntry labelSecond = newLabel();
+			codeGenerator.generate(TacCode.GOTO, null, null, labelSecond);
+			codeGenerator.generate(TacCode.LABEL, null, null, labelFirst);
+			labelFirst = labelSecond;
+			parse_else();
+		}
+		codeGenerator.generate(TacCode.LABEL, null, null, labelFirst);
+	}
+
+	private boolean check_optional_else() {
+		return match(TokenCode.ELSE);
+	}
+
+	private void parse_for() throws IOException, ParseException {
+		next_token();
+		try {
+			expect(TokenCode.LPAREN);
+			variable_loc();
+			expect(TokenCode.ASSIGNOP);
+			expression();
+			expect(TokenCode.SEMICOLON);
+			expression();
+			expect(TokenCode.SEMICOLON);
+			incr_decr_var();
+			expect(TokenCode.RPAREN);
+		} catch (ParseException e) {
+			consume_all_up_to(lbrace_set);
+		}
+		statement_block();
 	}
 
 
@@ -347,9 +400,7 @@ public class Parser{
 		expect(TokenCode.INCDECOP);
 	}
 
-	private void optional_else() throws IOException, ParseException {
-		if(!match(TokenCode.ELSE))
-			return;  // epsilon rule
+	private void parse_else() throws IOException, ParseException {
 		next_token();
 		statement_block();
 	}
@@ -373,9 +424,10 @@ public class Parser{
 		more_expressions();
 	}
 
-	private void expression() throws IOException, ParseException {
+	private SymbolTableEntry expression() throws IOException, ParseException {
 		simple_expression();
 		optional_relop();
+		return null; // TODO
 	}
 
 	private void optional_relop() throws IOException, ParseException {
@@ -386,12 +438,16 @@ public class Parser{
 		simple_expression();
 	}
 
-	private void simple_expression() throws IOException, ParseException {
+	private SymbolTableEntry simple_expression() throws IOException, ParseException {
 		// sign rule
-		if(match(OpType.PLUS) || match(OpType.MINUS))
-			sign();
+
+		if(match(OpType.PLUS) || match(OpType.MINUS)) {
+			OpType opType = sign(); // generate UMINUS
+		}
+		
 		term();
 		optional_addops();
+		return null; // TODO
 	}
 
 	private void optional_addops() throws IOException, ParseException {
@@ -416,30 +472,38 @@ public class Parser{
 		term();
 	}
 
-	private void factor() throws IOException, ParseException {
+	private SymbolTableEntry factor() throws IOException, ParseException {
+		SymbolTableEntry entry = null;
 		if(match(TokenCode.IDENTIFIER)){
+			entry = checkVariable(currentToken.getLexeme());
+			if(entry == null) {
+				errorList.add(new ParseError("error: cannot find symbol", currentToken));
+				throw new ParseException();
+			}
 			next_token();
 			opt_array_func_call();
 		}
 		else if(match(TokenCode.NUMBER)) {
+			entry = new SymbolTableEntry(currentToken.getLexeme(), EntryType.CONSTANT);
 			next_token();
 		}
 		else if(match(TokenCode.LPAREN)) {
 			next_token();
-			expression();
+			entry = expression();
 			expect(TokenCode.RPAREN);
 		}
 		else if(match(TokenCode.NOT)) {
 			next_token();
-			factor();
+			entry = factor();
 		}
 		else if(match(TokenCode.ERR_ILL_CHAR)) {
-			errorList.add(new ParseError("Invalid character", currentToken));
+			errorList.add(new ParseError("error: invalid character", currentToken));
 			throw new ParseException();
 		} else {
 			errorList.add(new ParseError("error: expression expected", currentToken));
 			throw new ParseException();
 		}
+		return entry;
 	}
 
 	private void opt_array_func_call() throws IOException, ParseException {
@@ -468,11 +532,12 @@ public class Parser{
 		expect(TokenCode.RBRACKET);
 	}
 
-	private void sign() throws IOException, ParseException {
+	private OpType sign() throws IOException, ParseException {
 		if(!match(OpType.PLUS) && !match(OpType.MINUS))
 			throw new ParseException();
-
+		OpType opType = currentToken.getOpType();
 		next_token();
+		return opType;
 	}
 
 
@@ -534,7 +599,7 @@ public class Parser{
 			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
 			throw new ParseException();
 		}
-		else if (!currentToken.getSymbolTableEntry().getLexeme().equals("Program")) {
+		else if (!currentToken.getLexeme().equals("Program")) {
 			errorList.add(new ParseError("error: Programs in Decaf are written in a single class, that should by convention be named ’Program’", currentToken));
 			throw new ParseException();
 		}
@@ -561,18 +626,32 @@ public class Parser{
 	
 
 	private SymbolTableEntry newTemp() {
-		SymbolTableEntry temp = new SymbolTableEntry("t" + this.tempCounter++);
-		localSymbolTable.add(temp);
+		SymbolTableEntry temp = new SymbolTableEntry("t" + this.tempCounter++, EntryType.VARIABLE);
+		localSymbolTable.add(temp.getLexeme(), temp);
 		codeGenerator.generate(TacCode.VAR, null, null, temp);
 		return temp;
 	}
 
 	private SymbolTableEntry newLabel() {
-		SymbolTableEntry temp = new SymbolTableEntry("lab" + this.labelCounter++);
-		localSymbolTable.add(temp);
+		SymbolTableEntry temp = new SymbolTableEntry("lab" + this.labelCounter++, EntryType.LABEL);
+		//localSymbolTable.add(temp.getLexeme(), temp);
 		return temp;
 	}
 	
+
+	// TODO checking for name only
+	private SymbolTableEntry checkFunction(String x) {
+		SymbolTableEntry item = globalSymbolTable.get(x);
+		if(item.getEntryType() == EntryType.FUNCTION) 
+			return item;
+		else 
+			return null;
+	}
+
+	private SymbolTableEntry checkVariable(String x) {
+		SymbolTableEntry localVariable = localSymbolTable.get(x);
+		return (localVariable != null) ? localVariable : globalSymbolTable.get(x);
+	}
 
 
 }

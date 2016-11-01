@@ -5,6 +5,7 @@ public class LexAnal {
 	public static void main(String[] args) throws  IOException {
 		Lexer lexer = new Lexer(new FileReader(args[0]));
 		SymbolTable table = new SymbolTable();
+		/*
 
 		while(true) {
 			Token t = lexer.yylex();
@@ -12,7 +13,7 @@ public class LexAnal {
 			TokenCode tokenCode = t.getTokenCode();
 			DataType dataType = t.getDataType();
 			OpType opType = t.getOpType();
-			SymbolTableEntry entry = t.getSymbolTableEntry();
+			String lexeme = t.getLexeme();
 
 
 			switch(dataType) {
@@ -51,6 +52,7 @@ public class LexAnal {
 			System.out.print(" ");
 
 		}
+		*/
 	}
 
 }

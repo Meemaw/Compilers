@@ -2,7 +2,6 @@ package analyzer;
 /* Imports */
 import analyzer.Token;
 import analyzer.TokenCode;
-import parser.SymbolTableEntry;
 import analyzer.DataType;
 import analyzer.OpType;
 
@@ -19,19 +18,16 @@ import analyzer.OpType;
 // Custom java code there
 %{
 	private Token token(DataType dt, TokenCode tc,  OpType ot) {
-		return new Token(dt, tc, ot, entry(yytext()), yyline, yycolumn);
+		return new Token(dt, tc, ot, yytext(), yyline, yycolumn);
 	}
 
-	private Token token(DataType dt, TokenCode tc, OpType ot, SymbolTableEntry ste) {
-		if (tc == TokenCode.IDENTIFIER && ste.getLexeme().length() > 32)
-			return new Token(dt, TokenCode.ERR_LONG_ID, ot, ste, yyline, yycolumn);
+	private Token token(DataType dt, TokenCode tc, OpType ot, String lexeme) {
+		if (tc == TokenCode.IDENTIFIER && lexeme.length() > 32)
+			return new Token(dt, TokenCode.ERR_LONG_ID, ot, lexeme, yyline, yycolumn);
 		else
-			return new Token(dt, tc, ot, ste, yyline, yycolumn);
+			return new Token(dt, tc, ot, lexeme, yyline, yycolumn);
 	}
 
-	private SymbolTableEntry entry(String x) {
-		return new SymbolTableEntry(x);
-	}
 %}
 
 // %debug
