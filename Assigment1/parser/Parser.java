@@ -1,3 +1,5 @@
+package parser;
+
 import analyzer.*;
 import java.util.*;
 import java.io.IOException;
@@ -56,7 +58,8 @@ public class Parser{
 	public ArrayList<ParseError> parse() throws IOException {
 		try {
 			program();
-			codeGenerator.printCode();
+			if(errorList.size() == 0)
+				codeGenerator.printCode();
 		}
 		catch (ParseException e) {
 			// do nothing

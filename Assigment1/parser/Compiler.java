@@ -1,3 +1,5 @@
+package parser;
+
 import java.io.*;
 import java.util.ArrayList;
 import analyzer.*;
@@ -27,7 +29,7 @@ public class Compiler {
 
 
 		if (error_list.isEmpty()) {
-			System.out.println("No errors");
+			//System.out.println("No errors");
 			return;
 		}
 

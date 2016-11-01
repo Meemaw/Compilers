@@ -1,3 +1,5 @@
+package parser;
+
 import analyzer.Token;
 
 public class ParseError {

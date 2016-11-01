@@ -1,6 +1,6 @@
-package analyzer;
+package parser;
 import java.util.*;
-import analyzer.SymbolTableEntry;
+
 
 public class SymbolTable {
 

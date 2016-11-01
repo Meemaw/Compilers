@@ -2,7 +2,7 @@ package analyzer;
 /* Imports */
 import analyzer.Token;
 import analyzer.TokenCode;
-import analyzer.SymbolTableEntry;
+import parser.SymbolTableEntry;
 import analyzer.DataType;
 import analyzer.OpType;
 

@@ -1,4 +1,4 @@
-import analyzer.SymbolTableEntry;
+package parser;
 
 
 public class Quadruple {
@@ -40,8 +40,8 @@ public class Quadruple {
 
 
 		return String.format("%6s", code) +
-		 		String.format("%33s", param1String) +
-		 		 String.format("%33s", param2String) +
-		 		 String.format("%33s", resultString);
+		 		String.format("%17s", param1String) +
+		 		 String.format("%17s", param2String) +
+		 		 String.format("%17s", resultString);
 	}
 }

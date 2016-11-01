@@ -1,5 +1,7 @@
 package analyzer;
 
+import parser.SymbolTableEntry;
+
 public class Token {
 
 	private DataType dataType;

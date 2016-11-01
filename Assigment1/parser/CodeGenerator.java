@@ -1,5 +1,7 @@
-import analyzer.*;
+package parser;
+
 import java.util.ArrayList;
+import analyzer.Token;
 
 
 public class CodeGenerator {

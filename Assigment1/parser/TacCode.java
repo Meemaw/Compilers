@@ -1,3 +1,5 @@
+package parser;
+
 public enum TacCode {
 	LABEL, UMINUS, ASSIGN, ADD, SUB, MULT, DIVIDE,
 	DIV, MOD, OR, AND, NOT, LT, LE, GT, GE, EQ, NE,
