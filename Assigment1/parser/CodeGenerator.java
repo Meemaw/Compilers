@@ -16,6 +16,10 @@ public class CodeGenerator {
 		code.addQuadruple(new Quadruple(tacCode, param1, param2, result));
 	}
 
+	public void generate(Quadruple quadruple) {
+		code.addQuadruple(quadruple);
+	}
+
 	public void functionParameters(ArrayList<SymbolTableEntry> params) {
 		for(SymbolTableEntry entry : params) {
 			generate(TacCode.FPARAM, null, null, entry);
@@ -28,5 +32,5 @@ public class CodeGenerator {
 		}
 	}
 
-	
+
 }
