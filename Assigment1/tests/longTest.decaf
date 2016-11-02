@@ -1,0 +1,132 @@
+class Program{
+
+    int i;
+    real j;
+
+    int very_very_long_variable_name;
+
+    static void main(){
+
+        i = 1;
+        j = 1;
+
+        //testing operations on ints
+        int k = i + 2;              //k = 3
+        k++;                        //k = 4;
+        k = k * k;                  //k = 16
+        k--;                        //k = 15
+        k = k - 3;                  //k = 12
+        k = 2 * (k - 5) + (k * 5);  //k = 134
+        writeln(k);
+
+        //testing operations on reals
+        real l = j + 2;
+        j++;
+        j = j * j;
+        j--;
+        j = j - 3;
+        j = 2 * (j - 5) + (j * 5); //k = 134
+        writeln(j);
+
+        //testing if-else structures and relational operators
+        int one = 1;
+        int two = 2;
+        int three = 3;
+
+        if (one > two){
+            writeln(-2);
+        }
+        if (one == two){
+            writeln(-1);
+        }
+        if (one < two){
+            writeln(1); //printed value should be this one
+        }
+        if (one != two){
+            writeln(2);
+        }
+        else {
+            writeln(-12);
+        }
+
+
+        if (one < two && two < three){
+            writeln(123);   //printed value should be this one
+        }
+        else{
+            writeln(-123);
+        }
+
+        if (one == two || one == one){
+            writeln(11);    //printed value should be this one
+        }
+        else{
+            writeln(-11);
+        }
+
+
+
+        //testing for loop
+        for (int p = 0; p < 10; p++){ //prints unmbers from 0 to 8, number eight and five with a negative symbol
+            if (p == 5){
+                writeln(-5);
+                continue;
+            }
+            if (p == 8){
+                writeln(-8);
+                break;
+            }
+            else{
+                writeln(p);
+            }
+        }
+
+        for (int i = 10; i >= 0; i--){ //prints unmbers from 10 to 0, number eight and five with a negative symbol
+            if (p == 5){
+                writeln(-5);
+                continue;
+            }
+            else{
+                writeln(i);
+            }
+        }
+
+        //testing function calls
+        //writes 10
+        writeln(ten());
+        //writes 3
+        writeln(int_sum(1, 2));
+        //writes 2
+        writeln(int_sub(5, 3));
+        //writes 5
+        writeln(int_sum(int_sub(5,3), int_sum(1, 2));
+
+
+        //writes 120
+        writeln(fact(5));
+    }
+
+    int ten(){
+        return 10;
+    }
+
+    int int_sum(int first, int second){
+        return first + second;
+    }
+
+    int int_sub(int first, int second){
+        return first - second);
+    }
+
+    real fact(real n){
+        if (n == 1){
+            return 1;
+        }
+        else{
+            return n * fact(n-1);
+        }
+    }
+
+
+
+}
