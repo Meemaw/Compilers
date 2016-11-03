@@ -176,6 +176,10 @@ public class Parser{
 			method_declaration();
 
 			if (!match(TokenCode.STATIC)) {
+				if(checkFunction("main") == null) {
+					errorList.add(new ParseError("error: main function should allways be declared", currentToken));
+					throw new ParseException();
+				}
 				return; // epsilon rule
 			}
 		} catch (ParseException e) {
