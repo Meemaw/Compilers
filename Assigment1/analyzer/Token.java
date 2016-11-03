@@ -14,9 +14,12 @@ public class Token {
 		this.dataType = dataType;
 		this.tokenCode = tokenCode;
 		this.opType = opType;
-		this.lexeme = lexeme;
 		this.line = line;
 		this.column = column;
+		if(lexeme.matches("^lab[\\d]+$") || lexeme.matches("^t[\\d]+$"))
+			this.lexeme = "_" + lexeme;
+		else
+			this.lexeme = lexeme;
 	}
 
 	public TokenCode getTokenCode() {
