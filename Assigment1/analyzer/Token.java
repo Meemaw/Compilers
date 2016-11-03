@@ -43,5 +43,7 @@ public class Token {
 		return this.lexeme;
 	}
 
-
+	public void prefixLexeme() {
+		this.lexeme = "_" + this.lexeme;
+	}
 }

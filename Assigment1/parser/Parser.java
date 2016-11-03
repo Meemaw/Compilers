@@ -633,6 +633,7 @@ public class Parser{
 	private void next_token() throws IOException,ParseException {
 		previousToken = currentToken;
 		currentToken = lexer.yylex();
+		prefix_user_identifier(currentToken);
 	}
 
 	private boolean statement_start() {
@@ -714,5 +715,14 @@ public class Parser{
 		return (localVariable != null) ? localVariable : globalSymbolTable.get(x);
 	}
 
-
+	// prefix user defined identifier to avoid collision with temp variables and labels
+	private void prefix_user_identifier(Token token) {
+		if(token.getTokenCode() == TokenCode.IDENTIFIER &&
+		 !token.getLexeme().equals("Program") &&
+		 !token.getLexeme().equals("main") &&
+		 !token.getLexeme().equals("writeln") &&
+		 !token.getLexeme().equals("write")) {
+			token.prefixLexeme();
+		}
+	}
 }
