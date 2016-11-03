@@ -192,11 +192,13 @@ public class Parser{
 	private void method_declaration() throws IOException, ParseException {
 		localSymbolTable = new SymbolTable();
 		expect(TokenCode.STATIC);
+		Token identifier = currentToken;
 		String name = "";
 		if (type() != DataType.NOT_A_TYPE) {
 			next_token();
 			try {
 				name = currentToken.getLexeme();
+				identifier = currentToken;
 				expect(TokenCode.IDENTIFIER);
 			} catch (ParseException e) {
 				consume_all_up_to(lparen_set);
@@ -218,6 +220,10 @@ public class Parser{
 		try {
 			ArrayList<SymbolTableEntry> params = parameters();
 			codeGenerator.functionParameters(params);
+			if(checkFunction(name) != null) {
+				errorList.add(new ParseError("error: method " + name +  " is already defined in class", identifier));
+				throw new ParseException();
+			}
 			SymbolTableEntry function = new SymbolTableEntry(name, EntryType.FUNCTION, params.size());
 			globalSymbolTable.add(name, function);
 			expect(TokenCode.RPAREN);
