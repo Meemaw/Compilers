@@ -1,0 +1,133 @@
+class Program{
+
+    int i;
+    real j;
+
+    int very_very_long_variable_name;
+
+    static int ten(){
+        return 10;
+    }
+
+    static int int_sum(int first, int second){
+        return first + second;
+    }
+
+    static int int_sub(int first, int second){
+        return first - second;
+    }
+
+    static real fact(real n){
+        if (n == 1){
+            return 1;
+        }
+        else{
+            return n * fact(n-1);
+        }
+    }
+
+    static void main(){
+        int k,one,two,three,p,i;
+        int sum;
+        real l;
+        i = 1;
+        j = 1;
+
+        //testing operations on ints
+        k = i + 2;
+        k = k * k;
+        k = k - 3;
+        k = 2 * (k - 5) + (k * 5);
+        writeln(k); // print 32
+
+        //testing operations on reals
+        j = j * j; // j = 1
+        j = j - 3; // j = -2
+        j = 2 * (j - 5) + (j * 5);
+        writeln(j); // print -24
+
+        //testing if-else structures and relational operators
+        one = 1;
+        two = 2;
+        three = 3;
+
+        if (one > two){
+            writeln(-2);
+        }
+        if (one == two){
+            writeln(-1);
+        }
+        if (one < two){
+            writeln(1); // print 1
+        }
+        if (one != two){
+            writeln(2); // print 2
+        }
+        else {
+            writeln(-12);
+        }
+
+
+        if ((one < two) && (two < three)){
+            writeln(123);   // print 123
+        }
+        else{
+            writeln(-123);
+        }
+
+        if ((one == two) || (one == one)){
+            writeln(11);    // print 11
+        }
+        else{
+            writeln(-11);
+        }
+
+
+
+         // print 0 1 2 3 4 -5 5 6 7 -8 9
+        for (p = 0; p < 10; p++){
+            if (p == 5){
+                writeln(-5);
+            }
+            if (p == 8){
+                writeln(-8);
+            }
+            else{
+                writeln(p);
+            }
+        }
+
+        // print 10 9 8 7 6 5 4 3 2 1 0
+        for (i = 10; i >= 0; i--){
+            if (p == 5){
+                writeln(-5);
+            }
+            else{
+                writeln(i);
+            }
+        }
+
+        // print 10
+        writeln(ten());
+        // print 3
+        writeln(int_sum(1, 2));
+        // print 2
+        writeln(int_sub(5, 3));
+        // print 5
+        writeln(int_sum(int_sub(5,3), int_sum(1, 2)));
+
+
+        // print 120
+        writeln(fact(5));
+
+
+        sum = 0;
+        for(i = 0; i < 10; i++) {
+            for(j = 0; j < 10; j++) {
+                sum++;
+            }
+        }
+        // print 100
+        writeln(sum);
+    }
+}
