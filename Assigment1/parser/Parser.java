@@ -192,8 +192,9 @@ public class Parser{
 	private void method_declaration() throws IOException, ParseException {
 		localSymbolTable = new SymbolTable();
 		expect(TokenCode.STATIC);
-		Token identifier = currentToken; // why this initialization ??
-		DataType return_type = DataType.VOID;
+		Token identifier = null;
+		SymbolTableEntry function = null;
+		DataType return_type = null;
 		String name = "";
 		if (type() != DataType.NOT_A_TYPE) {
 			return_type = type();
@@ -211,8 +212,6 @@ public class Parser{
 			errorList.add(new ParseError("error: invalid method declaration; return type required", currentToken));
 			consume_all_up_to(lparen_set);
 		}
-		else if (match(TokenCode.LPAREN)) {
-		}
 		else {
 			throw new ParseException();
 		}
@@ -222,10 +221,11 @@ public class Parser{
 		try {
 			ArrayList<SymbolTableEntry> params = parameters();
 			if(checkFunction(name) != null) {
-				errorList.add(new ParseError("error: method " + name +  " is already defined in class", identifier));
+				if (!name.equals(""))
+					errorList.add(new ParseError("error: method " + name +  " is already defined in class", identifier));
 				throw new ParseException();
 			}
-			SymbolTableEntry function = new SymbolTableEntry(name, EntryType.FUNCTION, params.size(), return_type);
+			function = new SymbolTableEntry(name, EntryType.FUNCTION, params.size(), return_type);
 			globalSymbolTable.add(name, function);
 			codeGenerator.generate(TacCode.LABEL, null, null, function);
 			codeGenerator.functionParameters(params);
@@ -237,7 +237,7 @@ public class Parser{
 		expect(TokenCode.LBRACE);
 
 		variable_declarations(true);
-		statement_list(null, null);
+		statement_list(null, null, function);
 
 		expect(TokenCode.RBRACE);
 		codeGenerator.generate(TacCode.RETURN, null, null, null);
@@ -282,10 +282,10 @@ public class Parser{
 	}
 
 
-	private void statement_list(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel) throws IOException, ParseException {
+	private void statement_list(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
 		if(statement_start())
 			try {
-				statement(afterForLabel, beforeForLabel);
+				statement(afterForLabel, beforeForLabel, function);
 			} catch (ParseException e) {
 				consume_all_up_to(statement_recovery_set);
 			}
@@ -300,26 +300,38 @@ public class Parser{
 			consume_all_up_to(statement_recovery_set);
 		}
 
-		statement_list(afterForLabel, beforeForLabel);
+		statement_list(afterForLabel, beforeForLabel, function);
 	}
 
-
-	private void statement(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel) throws IOException, ParseException {
+	// TODO - return true if it was finished by return statement
+	private void statement(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
 		if(match(TokenCode.IDENTIFIER)) {
 			next_token();
 			assign_incdec_func_call(previousToken); // semantic check inside
 			expect(TokenCode.SEMICOLON);
 		}
 		else if(match(TokenCode.IF)) {
-			parse_if(afterForLabel, beforeForLabel);
+			parse_if(afterForLabel, beforeForLabel, function);
 		}
 		else if(match(TokenCode.FOR)) {
-			parse_for();
+			parse_for(function);
 		}
 		else if(match(TokenCode.RETURN)) {
-			next_token();
-			// TODO ... ASSIGN expression into function name
-			optional_expression();
+			next_token(); // consuming keyword return
+			SymbolTableEntry return_value = optional_expression();
+
+			if (function.getReturnType() != DataType.VOID) {
+				// function should return something
+				if (return_value == null) {
+					errorList.add(new ParseError("error: missing return value", previousToken));
+					throw new ParseException();
+				}
+				codeGenerator.generate(TacCode.ASSIGN, return_value, null, function);
+			}
+			else if (function.getReturnType() == DataType.VOID && return_value != null) {
+				errorList.add(new ParseError("error: cannot return a value from method whose result type is void", previousToken));
+				throw new ParseException();
+			}
 			expect(TokenCode.SEMICOLON);
 			codeGenerator.generate(TacCode.RETURN, null, null, null);
 		}
@@ -333,7 +345,7 @@ public class Parser{
 			expect(TokenCode.SEMICOLON);
 		}
 		else if (match(TokenCode.LBRACE)){
-			statement_block(afterForLabel, beforeForLabel);
+			statement_block(afterForLabel, beforeForLabel, function);
 		}
 		else {
 			throw new IOException("something is wrong");
@@ -341,7 +353,7 @@ public class Parser{
 	}
 
 
-	private void parse_if(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel) throws IOException, ParseException {
+	private void parse_if(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
 
 		next_token();
 
@@ -356,14 +368,14 @@ public class Parser{
 			consume_all_up_to(lbrace_set);
 		}
 
-		statement_block(afterForLabel, beforeForLabel);
+		statement_block(afterForLabel, beforeForLabel, function);
 
 		if(check_optional_else()) {
 			SymbolTableEntry labelSecond = newLabel();
 			codeGenerator.generate(TacCode.GOTO, null, null, labelSecond);
 			codeGenerator.generate(TacCode.LABEL, null, null, labelFirst);
 			labelFirst = labelSecond;
-			parse_else(afterForLabel, beforeForLabel);
+			parse_else(afterForLabel, beforeForLabel, function);
 		}
 		codeGenerator.generate(TacCode.LABEL, null, null, labelFirst);
 	}
@@ -372,16 +384,16 @@ public class Parser{
 		return match(TokenCode.ELSE);
 	}
 
-	private void parse_for() throws IOException, ParseException {
+	private void parse_for(SymbolTableEntry function) throws IOException, ParseException {
 		next_token();
 		Quadruple quadruple = null;
 		SymbolTableEntry labelCondition = newLabel();
 		SymbolTableEntry labelForEnd = newLabel();
 		try {
 			expect(TokenCode.LPAREN);
-			variable_loc();
+			SymbolTableEntry var = variable_loc();
 			expect(TokenCode.ASSIGNOP);
-			expression();
+			codeGenerator.generate(TacCode.ASSIGN, expression(), null, var);
 			expect(TokenCode.SEMICOLON);
 			codeGenerator.generate(TacCode.LABEL, null, null ,labelCondition);
 			SymbolTableEntry conditionResult = expression();
@@ -392,7 +404,7 @@ public class Parser{
 		} catch (ParseException e) {
 			consume_all_up_to(lbrace_set);
 		}
-		statement_block(labelForEnd, labelCondition);
+		statement_block(labelForEnd, labelCondition, function);
 		codeGenerator.generate(quadruple);
 		codeGenerator.generate(TacCode.GOTO, null, null, labelCondition);
 		codeGenerator.generate(TacCode.LABEL, null, null, labelForEnd);
@@ -417,7 +429,7 @@ public class Parser{
 	// done
 	private SymbolTableEntry func_call (Token identifier) throws IOException, ParseException {
 		if(match(TokenCode.LPAREN)) {
-			SymbolTableEntry temp_var = newTemp();
+
 			SymbolTableEntry function = checkFunction(identifier.getLexeme());
 			if(function == null) {
 				errorList.add(new ParseError("error: cannot find symbol", identifier));
@@ -434,6 +446,7 @@ public class Parser{
 			codeGenerator.pushArguments(arguments); // Generate APARAM instruction for each argument
 			codeGenerator.generate(TacCode.CALL, function, null, null);
 			if (function.getReturnType() != DataType.VOID) {
+				SymbolTableEntry temp_var = newTemp();
 				codeGenerator.generate(TacCode.ASSIGN, function, null, temp_var);
 				return temp_var;
 			}
@@ -461,16 +474,16 @@ public class Parser{
 		}
 	}
 
-	private void optional_expression() throws IOException, ParseException {
+	private SymbolTableEntry optional_expression() throws IOException, ParseException {
 		if(!expression_start())
-			return; // epsilon rule;
+			return null; // epsilon rule;
 
-		expression();
+		return expression();
 	}
 
-	private void statement_block(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel) throws IOException, ParseException {
+	private void statement_block(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
 		expect(TokenCode.LBRACE);
-		statement_list(afterForLabel, beforeForLabel);
+		statement_list(afterForLabel, beforeForLabel, function);
 		expect(TokenCode.RBRACE);
 	}
 
@@ -483,9 +496,9 @@ public class Parser{
 			return new Quadruple(TacCode.SUB, entry, globalSymbolTable.get("1"), entry);
 	}
 
-	private void parse_else(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel) throws IOException, ParseException {
+	private void parse_else(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
 		next_token();
-		statement_block(afterForLabel, beforeForLabel);
+		statement_block(afterForLabel, beforeForLabel, function);
 	}
 
 	private ArrayList<SymbolTableEntry> expression_list() throws IOException, ParseException {
@@ -713,7 +726,7 @@ public class Parser{
 			// semantic check - variable declaration
 			entry = checkVariable(identifier.getLexeme());
 			if(entry == null) {
-				errorList.add(new ParseError("error: cannot find symbol", currentToken));
+				errorList.add(new ParseError("error: cannot find symbol", identifier));
 				throw new ParseException();
 			}
 			opt_index();

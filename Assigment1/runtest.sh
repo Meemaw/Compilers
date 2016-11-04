@@ -24,8 +24,8 @@ for decaf_source_file in `ls *.decaf`
 do
 	echo $decaf_source_file
 	BASENAME="`basename $decaf_source_file .decaf`"
-	run_command "java -jar $PARSER_JAR_FILE $decaf_source_file > $BASENAME.out.real" #2> $BASENAME.err.real
-	run_command "java -jar $INTERPRETER_JAR_FILE $BASENAME.out.real > $BASENAME.int.real" #2> $BASENAME.err.real
+	run_command "java -jar $PARSER_JAR_FILE $decaf_source_file > $BASENAME.tac.real" #2> $BASENAME.err.real
+	run_command "java -jar $INTERPRETER_JAR_FILE $BASENAME.tac.real > $BASENAME.int.real" #2> $BASENAME.err.real
 	#echo "$?" > $BASENAME.exit_code
 	run_command "diff $BASENAME.int.correct $BASENAME.int.real"
 	echo "======================================="

@@ -6,7 +6,7 @@ all: analyzer parser
 	jar cvfm Parser.jar META-INF/manifest.Parser parser/*.class parser/Compiler.class analyzer/*.class analyzer/analyzer.flex
 
 test:
-	java -jar Parser.jar "tests/official_tests/code_if.decaf"
+	java -jar Parser.jar "tests/longTest.decaf"
 	#java -jar Parser.jar "tests/Parser_tests/algebra.decaf"
 	#java -jar Parser.jar "tests/Parser_tests/err.decaf"
 
