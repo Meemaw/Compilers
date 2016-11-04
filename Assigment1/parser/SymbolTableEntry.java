@@ -7,15 +7,17 @@ public class SymbolTableEntry {
 	private String lexeme;
 	private EntryType entryType;
 	private int numParams;
+	private DataType returnType;
 
 	public SymbolTableEntry(String lexeme, EntryType entryType) {
 		this.lexeme = lexeme;
 		this.entryType = entryType;
 	}
 
-	public SymbolTableEntry(String lexeme, EntryType entryType, int numParams) {
+	public SymbolTableEntry(String lexeme, EntryType entryType, int numParams, DataType returnType) {
 		this(lexeme,entryType);
 		this.numParams = numParams;
+		this.returnType = returnType;
 	}
 
 	public int getNumParams() {
@@ -24,6 +26,10 @@ public class SymbolTableEntry {
 
 	public EntryType getEntryType() {
 		return this.entryType;
+	}
+
+	public DataType getReturnType() {
+		return this.returnType;
 	}
 
 	public String getLexeme() {

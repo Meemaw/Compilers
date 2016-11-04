@@ -72,8 +72,8 @@ public class Parser{
 
 	private void program() throws IOException, ParseException {
 		globalSymbolTable = new SymbolTable();
-		globalSymbolTable.add("writeln", new SymbolTableEntry("writeln", EntryType.FUNCTION, 1));
-		globalSymbolTable.add("write", new SymbolTableEntry("write", EntryType.FUNCTION, 1));
+		globalSymbolTable.add("writeln", new SymbolTableEntry("writeln", EntryType.FUNCTION, 1, DataType.VOID));
+		globalSymbolTable.add("write", new SymbolTableEntry("write", EntryType.FUNCTION, 1, DataType.VOID));
 		globalSymbolTable.add("0", new SymbolTableEntry("0", EntryType.CONSTANT));
 		globalSymbolTable.add("1", new SymbolTableEntry("1", EntryType.CONSTANT));
 		next_token();
@@ -143,7 +143,7 @@ public class Parser{
 	}
 
 	private void variable(boolean method_context) throws IOException, ParseException {
-		if(method_context) 
+		if(method_context)
 			add_if_not_defined(localSymbolTable, "method");
 		else
 			add_if_not_defined(globalSymbolTable, "class");
@@ -192,9 +192,11 @@ public class Parser{
 	private void method_declaration() throws IOException, ParseException {
 		localSymbolTable = new SymbolTable();
 		expect(TokenCode.STATIC);
-		Token identifier = currentToken;
+		Token identifier = currentToken; // why this initialization ??
+		DataType return_type = DataType.VOID;
 		String name = "";
 		if (type() != DataType.NOT_A_TYPE) {
+			return_type = type();
 			next_token();
 			try {
 				name = currentToken.getLexeme();
@@ -224,7 +226,7 @@ public class Parser{
 				errorList.add(new ParseError("error: method " + name +  " is already defined in class", identifier));
 				throw new ParseException();
 			}
-			SymbolTableEntry function = new SymbolTableEntry(name, EntryType.FUNCTION, params.size());
+			SymbolTableEntry function = new SymbolTableEntry(name, EntryType.FUNCTION, params.size(), return_type);
 			globalSymbolTable.add(name, function);
 			expect(TokenCode.RPAREN);
 		} catch (ParseException e) {
@@ -300,11 +302,11 @@ public class Parser{
 		statement_list(afterForLabel, beforeForLabel);
 	}
 
+
 	private void statement(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel) throws IOException, ParseException {
 		if(match(TokenCode.IDENTIFIER)) {
-
 			next_token();
-			assign_incdec_func_call(previousToken);
+			assign_incdec_func_call(previousToken); // semantic check inside
 			expect(TokenCode.SEMICOLON);
 		}
 		else if(match(TokenCode.IF)) {
@@ -315,8 +317,10 @@ public class Parser{
 		}
 		else if(match(TokenCode.RETURN)) {
 			next_token();
+			// TODO ... ASSIGN expression into function name
 			optional_expression();
 			expect(TokenCode.SEMICOLON);
+			codeGenerator.generate(TacCode.RETURN, null, null, null);
 		}
 		else if(match(TokenCode.BREAK) || match(TokenCode.CONTINUE)) {
 			if(match(TokenCode.BREAK) && afterForLabel != null)
@@ -352,8 +356,6 @@ public class Parser{
 		}
 
 		statement_block(afterForLabel, beforeForLabel);
-
-
 
 		if(check_optional_else()) {
 			SymbolTableEntry labelSecond = newLabel();
@@ -398,19 +400,7 @@ public class Parser{
 
 	private void assign_incdec_func_call(Token identifier) throws IOException, ParseException {
 		if(match(TokenCode.LPAREN)) {
-			SymbolTableEntry entry = checkFunction(identifier.getLexeme());
-			if(entry == null) {
-				errorList.add(new ParseError("error: cannot find symbol", identifier));
-				throw new ParseException();
-			}
-			next_token();
-			ArrayList<SymbolTableEntry> arguments = expression_list();
-			int numArguments = arguments.size();
-			if(entry.getNumParams() != numArguments) {
-				errorList.add(new ParseError("error: actual and formal argument lists differ in length", identifier));
-				throw new ParseException();
-			}
-			expect(TokenCode.RPAREN);
+			func_call(identifier);
 		}
 		else {
 			opt_index();
@@ -419,16 +409,54 @@ public class Parser{
 				errorList.add(new ParseError("error: cannot find symbol", identifier));
 				throw new ParseException();
 			}
-			assign_or_inc();
+			assign_or_inc(entry);
 		}
 	}
 
-	private void assign_or_inc() throws IOException, ParseException {
-		if(match(TokenCode.INCDECOP))
+	// done
+	private SymbolTableEntry func_call (Token identifier) throws IOException, ParseException {
+		if(match(TokenCode.LPAREN)) {
+			SymbolTableEntry temp_var = newTemp();
+			SymbolTableEntry function = checkFunction(identifier.getLexeme());
+			if(function == null) {
+				errorList.add(new ParseError("error: cannot find symbol", identifier));
+				throw new ParseException();
+			}
 			next_token();
+			ArrayList<SymbolTableEntry> arguments = expression_list();
+			int numArguments = arguments.size();
+			if(function.getNumParams() != numArguments) {
+				errorList.add(new ParseError("error: actual and formal argument lists differ in length", identifier));
+				throw new ParseException();
+			}
+			expect(TokenCode.RPAREN);
+			codeGenerator.pushArguments(arguments); // Generate APARAM instruction for each argument
+			codeGenerator.generate(TacCode.CALL, null, null, function);
+			if (function.getReturnType() != DataType.VOID) {
+				codeGenerator.generate(TacCode.ASSIGN, function, null, temp_var);
+				return temp_var;
+			}
+			else
+				return null;
+
+		}
+		else
+			return null;
+	}
+
+	// done
+	private void assign_or_inc(SymbolTableEntry entry) throws IOException, ParseException {
+		if(match(TokenCode.INCDECOP)) {
+			if (currentToken.getOpType() == OpType.INC)
+				codeGenerator.generate(TacCode.ADD, entry, globalSymbolTable.get("1"), entry);
+			else if (currentToken.getOpType() == OpType.DEC)
+				codeGenerator.generate(TacCode.SUB, entry, globalSymbolTable.get("1"), entry);
+
+			next_token();
+		}
 		else {
 			expect(TokenCode.ASSIGNOP);
-			expression();
+			codeGenerator.generate(TacCode.ASSIGN, expression(), null, entry);
 		}
 	}
 
@@ -448,7 +476,7 @@ public class Parser{
 	private Quadruple incr_decr_var() throws IOException, ParseException {
 		SymbolTableEntry entry = variable_loc();
 		expect(TokenCode.INCDECOP);
-		if(previousToken.getOpType() == OpType.INC) 
+		if(previousToken.getOpType() == OpType.INC)
 			return new Quadruple(TacCode.ADD, entry, globalSymbolTable.get("1"), entry);
 		else
 			return new Quadruple(TacCode.SUB, entry, globalSymbolTable.get("1"), entry);
@@ -488,66 +516,165 @@ public class Parser{
 	}
 	*/
 
+	// done
 	private SymbolTableEntry expression() throws IOException, ParseException {
-		simple_expression();
-		optional_relop();
-		return null; // TODO
+		SymbolTableEntry entry = simple_expression();
+		return optional_relop(entry);
 	}
 
-	private void optional_relop() throws IOException, ParseException {
+	// done
+	private SymbolTableEntry optional_relop(SymbolTableEntry entry_1) throws IOException, ParseException {
 		if(!match(TokenCode.RELOP))
-			return; // epsilon rule
+			return entry_1; // epsilon rule
 
-		next_token();
-		simple_expression();
-	}
+		OpType operator = currentToken.getOpType();
+		next_token(); // consuming operator
 
-	private SymbolTableEntry simple_expression() throws IOException, ParseException {
-		// sign rule
+		SymbolTableEntry entry_2 = simple_expression();
 
-		if(match(OpType.PLUS) || match(OpType.MINUS)) {
-			OpType opType = sign(); // generate UMINUS
+		SymbolTableEntry temp_var = newTemp();
+		SymbolTableEntry label_1 = newLabel();
+		SymbolTableEntry label_2 = newLabel();
+
+		TacCode relop;
+
+		switch(operator) {
+			case EQUAL:
+				relop = TacCode.EQ;
+				break;
+			case LTE:
+				relop = TacCode.LE;
+				break;
+			case GTE:
+				relop = TacCode.GE;
+				break;
+			case LT:
+				relop = TacCode.LT;
+				break;
+			case GT:
+				relop = TacCode.GT;
+				break;
+			case NOT_EQUAL:
+				relop = TacCode.NE;
+				break;
+			default:
+				relop = TacCode.NOOP;
+				break;
 		}
-		
-		term();
-		optional_addops();
-		return null; // TODO
+
+		codeGenerator.generate(relop, entry_1, entry_2, label_1);
+		codeGenerator.generate(TacCode.ASSIGN, globalSymbolTable.get("0"), null, temp_var);
+		codeGenerator.generate(TacCode.GOTO, null, null, label_2);
+		codeGenerator.generate(TacCode.LABEL, null, null, label_1);
+		codeGenerator.generate(TacCode.ASSIGN, globalSymbolTable.get("1"), null, temp_var);
+		codeGenerator.generate(TacCode.LABEL, null, null, label_2);
+
+		return temp_var;
 	}
 
-	private void optional_addops() throws IOException, ParseException {
+	// done
+	private SymbolTableEntry simple_expression() throws IOException, ParseException {
+
+		OpType opType = null;
+		// sign rule
+		if(match(OpType.PLUS) || match(OpType.MINUS)) {
+			opType = sign(); // generate UMINUS
+		}
+
+		SymbolTableEntry entry = term(opType);
+		return optional_addops(entry);
+	}
+
+	// done
+	private SymbolTableEntry optional_addops(SymbolTableEntry entry_1) throws IOException, ParseException {
 		if(!match(TokenCode.ADDOP))
-			return; // epsilon rule
+			return entry_1; // epsilon rule
 
+		OpType operator = currentToken.getOpType();
 		next_token();
-		SymbolTableEntry entry = term();
-		optional_addops();
 
+		SymbolTableEntry entry_2 = term(null);
+		SymbolTableEntry temp_var = newTemp();
+
+		TacCode addop;
+
+		switch(operator) {
+			case PLUS:
+				addop = TacCode.ADD;
+				break;
+			case MINUS:
+				addop = TacCode.SUB;
+				break;
+			case OR:
+				addop = TacCode.OR;
+				break;
+			default:
+				addop = TacCode.NOOP;
+				break;
+		}
+
+		codeGenerator.generate(addop, entry_1, entry_2, temp_var);
+
+		return optional_addops(temp_var);
 	}
 
-	private SymbolTableEntry term() throws IOException, ParseException {
+	// done
+	private SymbolTableEntry term(OpType unary_operator) throws IOException, ParseException {
 		SymbolTableEntry entry = factor();
-		optional_mulop();
-		return entry;
+		SymbolTableEntry temp;
+		if (unary_operator == OpType.MINUS) {
+			temp = newTemp();
+			codeGenerator.generate(TacCode.UMINUS, entry, null, temp);
+			entry = temp;
+		}
+
+		SymbolTableEntry result = optional_mulop(entry);
+
+		return result;
 	}
 
-	private void optional_mulop() throws IOException, ParseException {
+	// done
+	private SymbolTableEntry optional_mulop(SymbolTableEntry entry_1) throws IOException, ParseException {
 		if(!match(TokenCode.MULOP))
-			return; // epsilon rule
+			return entry_1; // epsilon rule
 
-		next_token();
-		term();
+		OpType operator = currentToken.getOpType();
+		next_token(); // consuming operator
+
+		SymbolTableEntry entry_2 = factor();
+		SymbolTableEntry temp_var = newTemp();
+
+		TacCode mulop;
+
+		switch(operator) {
+			case MULT:
+				mulop = TacCode.MULT;
+				break;
+			case DIV:
+				mulop = TacCode.DIV;
+				break;
+			case MOD:
+				mulop = TacCode.MOD;
+				break;
+			case AND:
+				mulop = TacCode.AND;
+				break;
+			default:
+				mulop = TacCode.NOOP;
+				break;
+		}
+
+		codeGenerator.generate(mulop, entry_1, entry_2, temp_var);
+
+		return optional_mulop(temp_var);
 	}
 
+	// done
 	private SymbolTableEntry factor() throws IOException, ParseException {
 		SymbolTableEntry entry = null;
 		if(match(TokenCode.IDENTIFIER)){
-			entry = checkVariable(currentToken.getLexeme());
-			if(entry == null) {
-				errorList.add(new ParseError("error: cannot find symbol", currentToken));
-				throw new ParseException();
-			}
-			next_token();
-			opt_array_func_call();
+			next_token(); // consume identifier
+			entry = opt_array_func_call(previousToken); // semantic check is inside
 		}
 		else if(match(TokenCode.NUMBER)) {
 			entry = new SymbolTableEntry(currentToken.getLexeme(), EntryType.CONSTANT);
@@ -560,7 +687,10 @@ public class Parser{
 		}
 		else if(match(TokenCode.NOT)) {
 			next_token();
+			SymbolTableEntry temp = newTemp();
 			entry = factor();
+			codeGenerator.generate(TacCode.NOT, entry, null, temp);
+			entry = temp;
 		}
 		else if(match(TokenCode.ERR_ILL_CHAR)) {
 			errorList.add(new ParseError("error: invalid character", currentToken));
@@ -572,15 +702,26 @@ public class Parser{
 		return entry;
 	}
 
-	private void opt_array_func_call() throws IOException, ParseException {
-		if(match(TokenCode.LPAREN)) {
-			next_token();
-			expression_list();
-			expect(TokenCode.RPAREN);
+	// done
+	private SymbolTableEntry opt_array_func_call(Token identifier) throws IOException, ParseException {
+		SymbolTableEntry entry;
+
+		if(match(TokenCode.LPAREN))
+			entry = func_call(identifier);
+		else {
+			// semantic check - variable declaration
+			entry = checkVariable(identifier.getLexeme());
+			if(entry == null) {
+				errorList.add(new ParseError("error: cannot find symbol", currentToken));
+				throw new ParseException();
+			}
+			opt_index();
 		}
-		else opt_index();
+
+		return entry;
 	}
 
+	// done
 	private SymbolTableEntry variable_loc() throws IOException, ParseException {
 		SymbolTableEntry entry = checkVariable(currentToken.getLexeme());
 		if(entry == null) {
@@ -593,7 +734,6 @@ public class Parser{
 	}
 
 
-
 	private void opt_index() throws IOException, ParseException {
 		if(!match(TokenCode.LBRACKET))
 			return; // epsilon rule
@@ -604,6 +744,7 @@ public class Parser{
 		expect(TokenCode.RBRACKET);
 	}
 
+	// done
 	private OpType sign() throws IOException, ParseException {
 		if(!match(OpType.PLUS) && !match(OpType.MINUS))
 			throw new ParseException();
@@ -690,7 +831,7 @@ public class Parser{
 		if (match(TokenCode.SEMICOLON))
 			next_token();
 	}
-	
+
 
 	private SymbolTableEntry newTemp() {
 		SymbolTableEntry temp = new SymbolTableEntry("t" + this.tempCounter++, EntryType.VARIABLE);
@@ -704,14 +845,14 @@ public class Parser{
 		//localSymbolTable.add(temp.getLexeme(), temp);
 		return temp;
 	}
-	
+
 
 	// TODO checking for name only
 	private SymbolTableEntry checkFunction(String x) {
 		SymbolTableEntry item = globalSymbolTable.get(x);
-		if(item != null && item.getEntryType() == EntryType.FUNCTION) 
+		if(item != null && item.getEntryType() == EntryType.FUNCTION)
 			return item;
-		else 
+		else
 			return null;
 	}
 

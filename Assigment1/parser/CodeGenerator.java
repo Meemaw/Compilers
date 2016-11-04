@@ -26,6 +26,12 @@ public class CodeGenerator {
 		}
 	}
 
+	public void pushArguments(ArrayList<SymbolTableEntry> args) {
+		for(SymbolTableEntry entry : args) {
+			generate(TacCode.APARAM, null, null, entry);
+		}
+	}
+
 	public void printCode() {
 		for(Quadruple quadruple : code.getQuadruples()) {
 			System.out.println(quadruple);
