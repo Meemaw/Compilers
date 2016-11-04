@@ -11,10 +11,10 @@ test:
 	#java -jar Parser.jar "tests/Parser_tests/err.decaf"
 
 tests:
-	@./runtest.sh Parser.jar
+	@./runtest.sh Parser.jar JTacInt.jar
 
 clean:
-	rm -f analyzer/*.class analyzer/Lexer.java* parser/*.class SourceCode.Zip LexAnal.jar Parser.jar tests/*.real
+	rm -f analyzer/*.class analyzer/Lexer.java* parser/*.class SourceCode.Zip LexAnal.jar Parser.jar tests/*.real tests/official_tests/*.real
 
 zip: all
 	zip SourceCode.Zip META-INF/* analyzer/analyzer.flex analyzer/*.java *.java jflex-1.6.1.jar Parser.jar Makefile AUTHORS grammar.pdf

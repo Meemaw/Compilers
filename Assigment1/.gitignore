@@ -16,6 +16,7 @@ Parser.jar
 
 # generated output from tests
 tests/*.real
+tests/official_tests/*.real
 
 *.zip
 *.Zip
