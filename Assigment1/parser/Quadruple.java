@@ -34,14 +34,17 @@ public class Quadruple {
 
 	@Override
 	public String toString() {
+		if(code == TacCode.LABEL)
+			return result.getLexeme();
+
 		String param1String = (param1 == null) ? "" : param1.getLexeme();
 		String param2String = (param2 == null) ? "" : param2.getLexeme();
 		String resultString = (result == null) ? "" : result.getLexeme();
 
 
-		return String.format("%6s", code) +
-		 		String.format("%17s", param1String) +
-		 		 String.format("%17s", param2String) +
-		 		 String.format("%17s", resultString);
+		return String.format("%10s", code) +
+		 		String.format("%15s", param1String) +
+		 		String.format("%15s", param2String) +
+		 		String.format("%15s", resultString) + "\n";
 	}
 }

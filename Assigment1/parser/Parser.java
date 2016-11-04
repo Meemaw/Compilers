@@ -85,8 +85,8 @@ public class Parser{
 		variable_declarations(false);
 		codeGenerator.generate(TacCode.GOTO, null, null, new SymbolTableEntry("main", EntryType.FUNCTION));
 		method_declarations();
-		System.out.println("Global symbol table:");
-		System.out.println(globalSymbolTable);
+		//System.out.println("Global symbol table:");
+		//System.out.println(globalSymbolTable);
 
 		expect(TokenCode.RBRACE);
 	}
@@ -221,13 +221,14 @@ public class Parser{
 
 		try {
 			ArrayList<SymbolTableEntry> params = parameters();
-			codeGenerator.functionParameters(params);
 			if(checkFunction(name) != null) {
 				errorList.add(new ParseError("error: method " + name +  " is already defined in class", identifier));
 				throw new ParseException();
 			}
 			SymbolTableEntry function = new SymbolTableEntry(name, EntryType.FUNCTION, params.size(), return_type);
 			globalSymbolTable.add(name, function);
+			codeGenerator.generate(TacCode.LABEL, null, null, function);
+			codeGenerator.functionParameters(params);
 			expect(TokenCode.RPAREN);
 		} catch (ParseException e) {
 			consume_all_up_to(lbrace_set);
@@ -240,8 +241,8 @@ public class Parser{
 
 		expect(TokenCode.RBRACE);
 		codeGenerator.generate(TacCode.RETURN, null, null, null);
-		System.out.println("Local symbol table:");
-		System.out.println(localSymbolTable);
+		//System.out.println("Local symbol table:");
+		//System.out.println(localSymbolTable);
 	}
 
 	private ArrayList<SymbolTableEntry> parameters() throws IOException, ParseException {
@@ -431,7 +432,7 @@ public class Parser{
 			}
 			expect(TokenCode.RPAREN);
 			codeGenerator.pushArguments(arguments); // Generate APARAM instruction for each argument
-			codeGenerator.generate(TacCode.CALL, null, null, function);
+			codeGenerator.generate(TacCode.CALL, function, null, null);
 			if (function.getReturnType() != DataType.VOID) {
 				codeGenerator.generate(TacCode.ASSIGN, function, null, temp_var);
 				return temp_var;
