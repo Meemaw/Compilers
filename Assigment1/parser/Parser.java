@@ -236,7 +236,7 @@ public class Parser{
 		expect(TokenCode.LBRACE);
 
 		variable_declarations(true);
-		statement_list(null, null, function);
+		statement_list(null, null, function, null);
 
 		expect(TokenCode.RBRACE);
 		codeGenerator.generate(TacCode.RETURN, null, null, null);
@@ -281,10 +281,10 @@ public class Parser{
 	}
 
 
-	private void statement_list(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
+	private void statement_list(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
 		if(statement_start())
 			try {
-				statement(afterForLabel, beforeForLabel, function);
+				statement(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 			} catch (ParseException e) {
 				consume_all_up_to(statement_recovery_set);
 			}
@@ -299,18 +299,18 @@ public class Parser{
 			consume_all_up_to(statement_recovery_set);
 		}
 
-		statement_list(afterForLabel, beforeForLabel, function);
+		statement_list(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 	}
 
 	// TODO - return true if it was finished by return statement
-	private void statement(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
+	private void statement(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
 		if(match(TokenCode.IDENTIFIER)) {
 			next_token();
 			assign_incdec_func_call(previousToken); // semantic check inside
 			expect(TokenCode.SEMICOLON);
 		}
 		else if(match(TokenCode.IF)) {
-			parse_if(afterForLabel, beforeForLabel, function);
+			parse_if(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 		}
 		else if(match(TokenCode.FOR)) {
 			parse_for(function);
@@ -337,14 +337,16 @@ public class Parser{
 		else if(match(TokenCode.BREAK) || match(TokenCode.CONTINUE)) {
 			if(match(TokenCode.BREAK) && afterForLabel != null)
 				codeGenerator.generate(TacCode.GOTO, null, null, afterForLabel);
-			else if(match(TokenCode.CONTINUE) && beforeForLabel != null)
+			else if(match(TokenCode.CONTINUE) && beforeForLabel != null) {
+				codeGenerator.generate(inc_decr_quadruple);
 				codeGenerator.generate(TacCode.GOTO, null, null, beforeForLabel);
+			}
 
 			next_token();
 			expect(TokenCode.SEMICOLON);
 		}
 		else if (match(TokenCode.LBRACE)){
-			statement_block(afterForLabel, beforeForLabel, function);
+			statement_block(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 		}
 		else {
 			throw new IOException("something is wrong");
@@ -352,7 +354,7 @@ public class Parser{
 	}
 
 
-	private void parse_if(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
+	private void parse_if(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
 
 		next_token();
 
@@ -367,14 +369,14 @@ public class Parser{
 			consume_all_up_to(lbrace_set);
 		}
 
-		statement_block(afterForLabel, beforeForLabel, function);
+		statement_block(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 
 		if(check_optional_else()) {
 			SymbolTableEntry labelSecond = newLabel();
 			codeGenerator.generate(TacCode.GOTO, null, null, labelSecond);
 			codeGenerator.generate(TacCode.LABEL, null, null, labelFirst);
 			labelFirst = labelSecond;
-			parse_else(afterForLabel, beforeForLabel, function);
+			parse_else(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 		}
 		codeGenerator.generate(TacCode.LABEL, null, null, labelFirst);
 	}
@@ -385,7 +387,7 @@ public class Parser{
 
 	private void parse_for(SymbolTableEntry function) throws IOException, ParseException {
 		next_token();
-		Quadruple quadruple = null;
+		Quadruple inc_decr_quadruple = null;
 		SymbolTableEntry labelCondition = newLabel();
 		SymbolTableEntry labelForEnd = newLabel();
 		try {
@@ -398,13 +400,13 @@ public class Parser{
 			SymbolTableEntry conditionResult = expression();
 			codeGenerator.generate(TacCode.EQ, conditionResult, globalSymbolTable.get("0"), labelForEnd);
 			expect(TokenCode.SEMICOLON);
-			quadruple = incr_decr_var();
+			inc_decr_quadruple = incr_decr_var();
 			expect(TokenCode.RPAREN);
 		} catch (ParseException e) {
 			consume_all_up_to(lbrace_set);
 		}
-		statement_block(labelForEnd, labelCondition, function);
-		codeGenerator.generate(quadruple);
+		statement_block(labelForEnd, labelCondition, function, inc_decr_quadruple);
+		codeGenerator.generate(inc_decr_quadruple);
 		codeGenerator.generate(TacCode.GOTO, null, null, labelCondition);
 		codeGenerator.generate(TacCode.LABEL, null, null, labelForEnd);
 	}
@@ -480,9 +482,9 @@ public class Parser{
 		return expression();
 	}
 
-	private void statement_block(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
+	private void statement_block(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
 		expect(TokenCode.LBRACE);
-		statement_list(afterForLabel, beforeForLabel, function);
+		statement_list(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 		expect(TokenCode.RBRACE);
 	}
 
@@ -495,9 +497,9 @@ public class Parser{
 			return new Quadruple(TacCode.SUB, entry, globalSymbolTable.get("1"), entry);
 	}
 
-	private void parse_else(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function) throws IOException, ParseException {
+	private void parse_else(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
 		next_token();
-		statement_block(afterForLabel, beforeForLabel, function);
+		statement_block(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 	}
 
 	private ArrayList<SymbolTableEntry> expression_list() throws IOException, ParseException {
