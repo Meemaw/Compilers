@@ -32,8 +32,7 @@ public class Quadruple {
 	}
 
 
-	@Override
-	public String toString() {
+	public String stringify(int longestLabel) {
 		if(code == TacCode.LABEL)
 			return result.getLexeme();
 
@@ -41,9 +40,12 @@ public class Quadruple {
 		String param2String = (param2 == null) ? "" : param2.getLexeme();
 		String resultString = (result == null) ? "" : result.getLexeme();
 
+		int param1_intendetion = longestLabel > 11 ? param1_intendetion = longestLabel + 4 : 15;
+
+
 
 		return String.format("%10s", code) +
-		 		String.format("%15s", param1String) +
+		 		String.format("%" + param1_intendetion + "s", param1String) +
 		 		String.format("%15s", param2String) +
 		 		String.format("%15s", resultString) + "\n";
 	}

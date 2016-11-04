@@ -41,19 +41,21 @@ public class CodeGenerator {
 			Quadruple temp = code.getQuadruples().get(i);
 			if(temp.getTacCode() != TacCode.LABEL) {
 				if(longestLabelLength <= 8) {
-					System.out.print(String.format("%64s", temp.toString()));
+					System.out.print(String.format("%64s", temp.stringify(longestLabelLength)));
 				}
 				else {
-					int actual = 64 + (longestLabelLength - 8);
-					System.out.print(String.format("%" + actual +"s", temp.toString()));
+					int actual = 64 + longestLabelLength - 8;
+					if(longestLabelLength > 11)
+						actual += longestLabelLength - 11;
+					System.out.print(String.format("%" + actual +"s", temp.stringify(longestLabelLength)));
 				}
 			} else {
 				Quadruple next = code.getQuadruples().get(++i);
 				if(longestLabelLength <= 8) {
-					System.out.print(String.format("%8s%55s", temp.toString() + ":", next.toString()));
+					System.out.print(String.format("%8s%55s", temp.stringify(longestLabelLength) + ":", next.stringify(longestLabelLength)));
 				}
 				else {
-					System.out.print(String.format("%" + longestLabelLength + "s%55s", temp.toString() + ":", next.toString()));
+					System.out.print(String.format("%" + longestLabelLength + "s%55s", temp.stringify(longestLabelLength) + ":", next.stringify(longestLabelLength)));
 				}
 			}
 		}
