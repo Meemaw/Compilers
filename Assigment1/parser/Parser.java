@@ -65,7 +65,6 @@ public class Parser{
 		catch (ParseException e) {
 			// do nothing
 		}
-
 		return errorList;
 	}
 
@@ -872,6 +871,13 @@ public class Parser{
 
 	private SymbolTableEntry checkVariable(String x) {
 		SymbolTableEntry localVariable = localSymbolTable.get(x);
-		return (localVariable != null) ? localVariable : globalSymbolTable.get(x);
+		if(localVariable != null) return localVariable;
+		else {
+			SymbolTableEntry globalVariable = globalSymbolTable.get(x);
+			if(globalVariable != null && globalVariable.getEntryType() == EntryType.VARIABLE)
+				return globalVariable;
+			else
+				return null;
+		}
 	}
 }
