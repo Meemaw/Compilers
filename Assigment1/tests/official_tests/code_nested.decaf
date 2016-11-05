@@ -1,0 +1,19 @@
+class Program{
+
+	static int third(int t){
+		return 1 + t;
+	}
+	
+	
+	static int second(int s){
+		return 1 + third(s);
+	}
+	
+	static int first(int f){
+		return 1 + second(f);
+	}
+	
+	static void main(){
+		writeln(first(0));
+	}
+}
