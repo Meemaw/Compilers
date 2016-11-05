@@ -1,0 +1,15 @@
+class Program{
+	
+	static int fib(int f){
+		if (f < 2){
+			return 1;
+		}
+		else{
+			return fib(f - 1) + fib(f - 2);
+		}
+	}
+	
+	static void main(){
+		writeln(fib(7));
+	}
+}
