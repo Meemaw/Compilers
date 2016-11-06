@@ -590,13 +590,21 @@ public class Parser{
 	// done
 	private SymbolTableEntry simple_expression() throws IOException, ParseException {
 
-		OpType opType = null;
+		OpType opt_unary_oprator = null;
 		// sign rule
 		if(match(OpType.PLUS) || match(OpType.MINUS)) {
-			opType = sign(); // generate UMINUS
+			opt_unary_oprator = sign();
 		}
 
-		SymbolTableEntry entry = term(opType);
+		SymbolTableEntry entry = term();
+
+		if (opt_unary_oprator == OpType.MINUS) { // generate UMINUS
+			SymbolTableEntry temp;
+			temp = newTemp();
+			codeGenerator.generate(TacCode.UMINUS, entry, null, temp);
+			entry = temp;
+		}
+
 		return optional_addops(entry);
 	}
 
@@ -608,7 +616,7 @@ public class Parser{
 		OpType operator = currentToken.getOpType();
 		next_token();
 
-		SymbolTableEntry entry_2 = term(null);
+		SymbolTableEntry entry_2 = term();
 		SymbolTableEntry temp_var = newTemp();
 
 		TacCode addop;
@@ -634,18 +642,10 @@ public class Parser{
 	}
 
 	// done
-	private SymbolTableEntry term(OpType unary_operator) throws IOException, ParseException {
+	private SymbolTableEntry term() throws IOException, ParseException {
 		SymbolTableEntry entry = factor();
-		SymbolTableEntry temp;
-		if (unary_operator == OpType.MINUS) {
-			temp = newTemp();
-			codeGenerator.generate(TacCode.UMINUS, entry, null, temp);
-			entry = temp;
-		}
 
-		SymbolTableEntry result = optional_mulop(entry);
-
-		return result;
+		return optional_mulop(entry);
 	}
 
 	// done
