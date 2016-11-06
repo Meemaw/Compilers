@@ -1,0 +1,23 @@
+class Program{
+	static void main(){
+		int one, two, three, four, five;
+	
+		
+		one = 1;
+		two = 2;
+		three = 3;
+		four = 4;
+		five = 5;
+		
+		if ((five - one) == four){	//true
+				if (three > four){		//false
+					writeln(-3);
+				}
+				else {
+					writeln(3);
+				}
+		}
+		
+		
+	}
+}
