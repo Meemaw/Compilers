@@ -1,14 +1,17 @@
 # TODO subroutines for compiling
 
-.PHONY: all test tests clean zip jar analyzer parser
+.PHONY: all test tests clean zip jar analyzer parser run
 
 all: analyzer parser
 	jar cvfm Parser.jar META-INF/manifest.Parser parser/*.class parser/Compiler.class analyzer/*.class analyzer/analyzer.flex
 
 test:
-	java -jar Parser.jar "tests/longTest.decaf"
-	#java -jar Parser.jar "tests/Parser_tests/algebra.decaf"
-	#java -jar Parser.jar "tests/Parser_tests/err.decaf"
+	@java -jar Parser.jar "tests/longTest.decaf"
+
+run:
+	@java -jar Parser.jar tests/longTest.decaf > temp_file
+	@java -jar JTacInt.jar temp_file
+	@rm temp_file
 
 tests:
 	@./runtest.sh Parser.jar JTacInt.jar
