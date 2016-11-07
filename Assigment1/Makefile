@@ -20,7 +20,7 @@ clean:
 	rm -f analyzer/*.class analyzer/Lexer.java* parser/*.class SourceCode.Zip LexAnal.jar Compiler.jar tests/*.real tests/official_tests/*.real
 
 zip: all
-	zip SourceCode.Zip META-INF/* analyzer/*.java parser/*.java analyzer/analyzer.flex jflex-1.6.1.jar Compiler.jar Makefile AUTHORS grammar.pdf tests/official_tests/*.decaf tests/official_tests/*.correct runtest.sh libtest.sh
+	zip SourceCode.Zip META-INF/* analyzer/*.java parser/*.java analyzer/analyzer.flex jflex-1.6.1.jar Compiler.jar Makefile AUTHORS grammar.pdf tests/official_tests/*.decaf tests/official_tests/*.correct runtest.sh libtest.sh JTacInt.jar
 
 analyzer:
 	java -jar jflex-1.6.1.jar analyzer/analyzer.flex

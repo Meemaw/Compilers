@@ -10,6 +10,7 @@ Lexer.java
 # can be also produced by make
 LexAnal.jar
 Parser.jar
+Compiler.jar
 
 # java bytecode (our application)
 *.class
