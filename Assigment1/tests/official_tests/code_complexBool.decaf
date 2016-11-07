@@ -1,27 +1,27 @@
 class Program{
-	
+
 	static void main(){
 		int one, two, three, four, five;
-		
+
 		one = 1;
 		two = 2;
 		three = 3;
 		four = 4;
 		five = 5;
-		
+
 		if ((one > two) && (three < four)){	//false
-			writeln(2134);		
+			writeln(2134);
 		}
 		else{
 			if ((one == 2) || (one == 1)){	//true
-				writeln(1); 	
+				writeln(1);
 			}
 			else{
-				writeln(-1);	
+				writeln(-1);
 			}
-			
+
 			if ((one - three) < 0){		//true
-				writeln(-2);	
+				writeln(-2);
 			}
 			if ((five - one) == four){	//true
 				if (three > four){		//false
@@ -34,7 +34,7 @@ class Program{
 			if ((one * 2) > one){		//true
 				writeln(21);
 			}
-			
+
 			if ((one > two) && (three != one)){ //false
 				writeln(-123);
 			}
@@ -43,7 +43,7 @@ class Program{
 					writeln(123);
 				}
 			}
-			
+
 		}//output: 1, -2, 3, 21, 123
 	}
 }

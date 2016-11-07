@@ -30,4 +30,8 @@ public class Quadruple {
 	public SymbolTableEntry getResult() {
 		return this.result;
 	}
+
+	public void setResult(SymbolTableEntry result) {
+		this.result = result;
+	}
 }

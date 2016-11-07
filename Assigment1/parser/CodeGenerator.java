@@ -49,6 +49,9 @@ public class CodeGenerator {
 	}
 
 	public void printCode() {
+		while(filterLabels());
+
+
 		int label_format = (longestLabelLength <= 8) ? 8 : longestLabelLength;
 		int param1_format = (longestParam1Length < 11) ? 15 : longestParam1Length + 4;
 		int param2_format = (longestParam2Length < 11) ? 15 : longestParam2Length + 4;
@@ -57,7 +60,7 @@ public class CodeGenerator {
 		for(int i = 0; i < code.getQuadruples().size(); i++) {
 			Quadruple temp = code.getQuadruples().get(i);
 			Pentatuple current;
-			if(temp.getTacCode() != TacCode.LABEL) 
+			if(temp.getTacCode() != TacCode.LABEL)
 				current = new Pentatuple(temp.getTacCode(),
 										 temp.getParam1(),
 										 temp.getParam2(),
@@ -77,4 +80,50 @@ public class CodeGenerator {
 												result_format));
 		}
 	}
+
+
+	private boolean filterLabels() {
+		ArrayList<Quadruple> filteredList = new ArrayList<>();
+
+		Quadruple firstLabel = null;
+		Quadruple duplicatedLabel = null;
+		boolean duplicatedLabelFound = false;
+
+
+		for(int i = 0; i < code.getQuadruples().size(); i++) {
+			Quadruple temp = code.getQuadruples().get(i);
+			if(duplicatedLabelFound) {
+				filteredList.add(temp);
+				continue;
+			}
+
+			if(firstLabel == null && temp.getTacCode() == TacCode.LABEL) {
+				firstLabel = temp;
+				filteredList.add(temp);
+			} else if(firstLabel != null && temp.getTacCode() == TacCode.LABEL) {
+				duplicatedLabelFound = true;
+				duplicatedLabel = temp;
+			} else {
+				firstLabel = null;
+				filteredList.add(temp);
+			}
+		}
+
+		code.setQuadrupleList(filteredList);
+		if(duplicatedLabelFound) {
+			for(int i = 0; i <  code.getQuadruples().size(); i++) {
+				Quadruple temp = code.getQuadruples().get(i);
+
+				if(temp.getResult() != null && temp.getResult() == duplicatedLabel.getResult())
+					temp.setResult(firstLabel.getResult());
+			}
+		}
+
+
+
+
+		return duplicatedLabelFound;
+	}
+
+
 }

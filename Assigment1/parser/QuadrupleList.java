@@ -17,4 +17,8 @@ public class QuadrupleList {
 	public void addQuadruple(Quadruple quadruple) {
 		quadruples.add(quadruple);
 	}
+
+	public void setQuadrupleList(ArrayList<Quadruple> quadrupleList) {
+		this.quadruples = quadrupleList;
+	}
 }

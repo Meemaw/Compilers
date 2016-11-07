@@ -3,24 +3,24 @@
 .PHONY: all test tests clean zip jar analyzer parser run
 
 all: analyzer parser
-	jar cvfm Parser.jar META-INF/manifest.Parser parser/*.class parser/Compiler.class analyzer/*.class analyzer/analyzer.flex
+	jar cvfm Compiler.jar META-INF/manifest.Compiler parser/*.class parser/Compiler.class analyzer/*.class analyzer/analyzer.flex
 
 test:
-	@java -jar Parser.jar "tests/longTest.decaf"
+	@java -jar Compiler.jar "tests/longTest.decaf"
 
 run:
-	@java -jar Parser.jar tests/longTest.decaf > temp_file
+	@java -jar Compiler.jar tests/longTest.decaf > temp_file
 	@java -jar JTacInt.jar temp_file
 	@rm temp_file
 
 tests:
-	@./runtest.sh Parser.jar JTacInt.jar
+	@./runtest.sh Compiler.jar JTacInt.jar
 
 clean:
-	rm -f analyzer/*.class analyzer/Lexer.java* parser/*.class SourceCode.Zip LexAnal.jar Parser.jar tests/*.real tests/official_tests/*.real
+	rm -f analyzer/*.class analyzer/Lexer.java* parser/*.class SourceCode.Zip LexAnal.jar Compiler.jar tests/*.real tests/official_tests/*.real
 
 zip: all
-	zip SourceCode.Zip META-INF/* analyzer/analyzer.flex analyzer/*.java *.java jflex-1.6.1.jar Parser.jar Makefile AUTHORS grammar.pdf
+	zip SourceCode.Zip META-INF/* analyzer/*.java parser/*.java analyzer/analyzer.flex jflex-1.6.1.jar Compiler.jar Makefile AUTHORS grammar.pdf tests/official_tests/*.decaf tests/official_tests/*.correct runtest.sh libtest.sh
 
 analyzer:
 	java -jar jflex-1.6.1.jar analyzer/analyzer.flex
