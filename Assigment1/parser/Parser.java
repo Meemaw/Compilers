@@ -63,11 +63,9 @@ public class Parser{
 				codeGenerator.printCode();
 		}
 		catch (ParseException e) {
-			// do nothing
 		}
 		return errorList;
 	}
-
 
 	private void program() throws IOException, ParseException {
 		globalSymbolTable = new SymbolTable();
@@ -84,8 +82,6 @@ public class Parser{
 		variable_declarations(false);
 		codeGenerator.generate(TacCode.GOTO, null, null, new SymbolTableEntry("main", EntryType.FUNCTION));
 		method_declarations();
-		//System.out.println("Global symbol table:");
-		//System.out.println(globalSymbolTable);
 
 		expect(TokenCode.RBRACE);
 	}
@@ -115,11 +111,9 @@ public class Parser{
 				consume_all_up_to(static_semicolon_set);
 
 		}
-
 		variable_declarations(method_context);
 	}
 
-	// return also void as a type
 	private DataType type() {
 		if (currentToken.getTokenCode() == TokenCode.INT)
 			return DataType.INT;
@@ -130,10 +124,8 @@ public class Parser{
 		return DataType.NOT_A_TYPE;
 	}
 
-	// this method implement also more_variables (nonterminal) rule
 	private void variable_list(boolean method_context) throws IOException, ParseException {
 		variable(method_context);
-
 
 		if (match(TokenCode.COMMA)) {
 			next_token();
@@ -185,7 +177,6 @@ public class Parser{
 			consume_all_up_to(static_set);
 		}
 		method_declarations();
-
 	}
 
 	private void method_declaration() throws IOException, ParseException {
@@ -207,7 +198,6 @@ public class Parser{
 			}
 		}
 		else if (match(TokenCode.IDENTIFIER)) {
-			// java: "error: invalid method declaration; return type required"
 			errorList.add(new ParseError("error: invalid method declaration; return type required", currentToken));
 			consume_all_up_to(lparen_set);
 		}
@@ -240,8 +230,6 @@ public class Parser{
 
 		expect(TokenCode.RBRACE);
 		codeGenerator.generate(TacCode.RETURN, null, null, null);
-		//System.out.println("Local symbol table:");
-		//System.out.println(localSymbolTable);
 	}
 
 	private ArrayList<SymbolTableEntry> parameters() throws IOException, ParseException {
@@ -280,7 +268,6 @@ public class Parser{
 		return e;
 	}
 
-
 	private void statement_list(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
 		if(statement_start())
 			try {
@@ -302,7 +289,6 @@ public class Parser{
 		statement_list(afterForLabel, beforeForLabel, function, inc_decr_quadruple);
 	}
 
-	// TODO - return true if it was finished by return statement
 	private void statement(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
 		if(match(TokenCode.IDENTIFIER)) {
 			next_token();
@@ -353,11 +339,8 @@ public class Parser{
 		}
 	}
 
-
 	private void parse_if(SymbolTableEntry afterForLabel, SymbolTableEntry beforeForLabel, SymbolTableEntry function, Quadruple inc_decr_quadruple) throws IOException, ParseException {
-
 		next_token();
-
 		SymbolTableEntry labelFirst = newLabel();
 
 		try {
@@ -411,7 +394,6 @@ public class Parser{
 		codeGenerator.generate(TacCode.LABEL, null, null, labelForEnd);
 	}
 
-
 	private void assign_incdec_func_call(Token identifier) throws IOException, ParseException {
 		if(match(TokenCode.LPAREN)) {
 			func_call(identifier);
@@ -427,7 +409,6 @@ public class Parser{
 		}
 	}
 
-	// done
 	private SymbolTableEntry func_call (Token identifier) throws IOException, ParseException {
 		if(match(TokenCode.LPAREN)) {
 
@@ -459,7 +440,6 @@ public class Parser{
 			return null;
 	}
 
-	// done
 	private void assign_or_inc(SymbolTableEntry entry) throws IOException, ParseException {
 		if(match(TokenCode.INCDECOP)) {
 			if (currentToken.getOpType() == OpType.INC)
@@ -518,26 +498,11 @@ public class Parser{
 		return args;
 	}
 
-	/*
-	private ArrayList<SymbolTableEntry> more_expressions() throws IOException, ParseException {
-		ArrayList<SymbolTableEntry> args = new ArrayList();
-		if(!match(TokenCode.COMMA))
-			return; // epsilon rule
-
-		next_token();
-		args.add(expression());
-		args.addAll(more_expressions());
-		return args;
-	}
-	*/
-
-	// done
 	private SymbolTableEntry expression() throws IOException, ParseException {
 		SymbolTableEntry entry = simple_expression();
 		return optional_relop(entry);
 	}
 
-	// done
 	private SymbolTableEntry optional_relop(SymbolTableEntry entry_1) throws IOException, ParseException {
 		if(!match(TokenCode.RELOP))
 			return entry_1; // epsilon rule
@@ -587,7 +552,6 @@ public class Parser{
 		return temp_var;
 	}
 
-	// done
 	private SymbolTableEntry simple_expression() throws IOException, ParseException {
 
 		OpType opt_unary_oprator = null;
@@ -604,11 +568,9 @@ public class Parser{
 			codeGenerator.generate(TacCode.UMINUS, entry, null, temp);
 			entry = temp;
 		}
-
 		return optional_addops(entry);
 	}
 
-	// done
 	private SymbolTableEntry optional_addops(SymbolTableEntry entry_1) throws IOException, ParseException {
 		if(!match(TokenCode.ADDOP))
 			return entry_1; // epsilon rule
@@ -635,20 +597,15 @@ public class Parser{
 				addop = TacCode.NOOP;
 				break;
 		}
-
 		codeGenerator.generate(addop, entry_1, entry_2, temp_var);
-
 		return optional_addops(temp_var);
 	}
 
-	// done
 	private SymbolTableEntry term() throws IOException, ParseException {
 		SymbolTableEntry entry = factor();
-
 		return optional_mulop(entry);
 	}
 
-	// done
 	private SymbolTableEntry optional_mulop(SymbolTableEntry entry_1) throws IOException, ParseException {
 		if(!match(TokenCode.MULOP))
 			return entry_1; // epsilon rule
@@ -684,7 +641,6 @@ public class Parser{
 		return optional_mulop(temp_var);
 	}
 
-	// done
 	private SymbolTableEntry factor() throws IOException, ParseException {
 		SymbolTableEntry entry = null;
 		if(match(TokenCode.IDENTIFIER)){
@@ -717,7 +673,6 @@ public class Parser{
 		return entry;
 	}
 
-	// done
 	private SymbolTableEntry opt_array_func_call(Token identifier) throws IOException, ParseException {
 		SymbolTableEntry entry;
 
@@ -736,7 +691,6 @@ public class Parser{
 		return entry;
 	}
 
-	// done
 	private SymbolTableEntry variable_loc() throws IOException, ParseException {
 		SymbolTableEntry entry = checkVariable(currentToken.getLexeme());
 		if(entry == null) {
@@ -748,7 +702,6 @@ public class Parser{
 		return entry;
 	}
 
-
 	private void opt_index() throws IOException, ParseException {
 		if(!match(TokenCode.LBRACKET))
 			return; // epsilon rule
@@ -759,7 +712,6 @@ public class Parser{
 		expect(TokenCode.RBRACKET);
 	}
 
-	// done
 	private OpType sign() throws IOException, ParseException {
 		if(!match(OpType.PLUS) && !match(OpType.MINUS))
 			throw new ParseException();
@@ -816,7 +768,6 @@ public class Parser{
 			|| currentToken.getOpType() == OpType.MINUS;
 	}
 
-
 	private void expectIdentifierProgram(TokenCode code) throws IOException, ParseException {
 		if(currentToken.getTokenCode() != code) {
 			errorList.add(new ParseError("error: %s expected".format(code.stringifyTokenCode()), currentToken));
@@ -847,7 +798,6 @@ public class Parser{
 			next_token();
 	}
 
-
 	private SymbolTableEntry newTemp() {
 		SymbolTableEntry temp = new SymbolTableEntry("t" + this.tempCounter++, EntryType.VARIABLE);
 		localSymbolTable.add(temp.getLexeme(), temp);
@@ -857,12 +807,9 @@ public class Parser{
 
 	private SymbolTableEntry newLabel() {
 		SymbolTableEntry temp = new SymbolTableEntry("lab" + this.labelCounter++, EntryType.LABEL);
-		//localSymbolTable.add(temp.getLexeme(), temp);
 		return temp;
 	}
 
-
-	// TODO checking for name only
 	private SymbolTableEntry checkFunction(String x) {
 		SymbolTableEntry item = globalSymbolTable.get(x);
 		if(item != null && item.getEntryType() == EntryType.FUNCTION)
