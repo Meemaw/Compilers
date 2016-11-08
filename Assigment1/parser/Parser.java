@@ -747,6 +747,8 @@ public class Parser{
 	private void next_token() throws IOException,ParseException {
 		previousToken = currentToken;
 		currentToken = lexer.yylex();
+		if(currentToken.getTokenCode() == TokenCode.ERR_LONG_ID)
+			errorList.add(new ParseError("error: identifier length too long", currentToken));
 	}
 
 	private boolean statement_start() {

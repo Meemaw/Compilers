@@ -18,16 +18,12 @@ import analyzer.OpType;
 // Custom java code there
 %{
 	private Token token(DataType dt, TokenCode tc,  OpType ot) {
-		return new Token(dt, tc, ot, yytext(), yyline, yycolumn);
-	}
-
-	private Token token(DataType dt, TokenCode tc, OpType ot, String lexeme) {
+		String lexeme = yytext();
 		if (tc == TokenCode.IDENTIFIER && lexeme.length() > 32)
 			return new Token(dt, TokenCode.ERR_LONG_ID, ot, lexeme, yyline, yycolumn);
 		else
 			return new Token(dt, tc, ot, lexeme, yyline, yycolumn);
 	}
-
 %}
 
 // %debug
